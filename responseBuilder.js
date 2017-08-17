@@ -115,7 +115,7 @@ var streamResponse = function(req,res,data){
     this.responseObject.response.outputSpeech.text = finalspeech;
 
     //  Defining action
-    this.responseObject.response.directives.type="AudioPlayer.Play";
+    this.responseObject.response.directives[0].type="AudioPlayer.Play";
 
     //  Adding stream informations
     this.responseObject.response.directives[0].audioItem.stream.token = this.data.radios[0].UID;
@@ -141,7 +141,30 @@ function buildStreamResponse(req,res){
 
     var sres = new streamResponse(req,res,data);
     sres.play();
-    res.json(sres.responseObject);
+    res.json({
+      "version": "1.0",
+      "response": {
+        "outputSpeech": {
+          "type": "PlainText",
+          "text": "YOLO"
+        },
+        "directives": [
+          {
+            "type":"AudioPlayer.Play",
+            "playBehavior":"REPLACE_ALL",
+            "audioItem":{
+              "stream": {
+                "token":"sdlfhqsdmlfkjqsmdf",
+                "url":"https://listen.shoutcast.com/ledjamradio.mp3",
+                "offsetInMilliseconds":0
+              }
+            }
+          }
+
+        ],
+        "shouldEndSession": true
+      }
+    });
 
   });
 
