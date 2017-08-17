@@ -15,7 +15,7 @@ function intentDispatch(req,res){
       responder.trackResponse(req,res);
     break;
     case "getRadioStream":
-      responder.streamResponse(req),res
+      responder.streamResponse(req,res)
     break;
   }
 

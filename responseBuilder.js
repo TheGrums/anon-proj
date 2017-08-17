@@ -106,14 +106,14 @@ var streamResponse = function(req,res,data){
       return;
     }
 
-    this.responseObject.outputSpeech.text = finalspeech;
+    this.responseObject.response.outputSpeech.text = finalspeech;
 
     //  Defining action
     this.responseObject.response.directives.type="AudioPlayer.Play";
 
     //  Adding stream informations
-    this.responseObject.response.directives.audioItem.stream.token = this.data.radios[0].UID;
-    this.responseObject.response.directives.audioItem.stream.url = "https://listen.shoutcast.com/ledjamradio.mp3";
+    this.responseObject.response.directives[0].audioItem.stream.token = this.data.radios[0].UID;
+    this.responseObject.response.directives[0].audioItem.stream.url = "https://listen.shoutcast.com/ledjamradio.mp3";
 
   };
 
@@ -121,7 +121,7 @@ var streamResponse = function(req,res,data){
 
     //  Generating adapted speech
     var speech = "";
-    this.responseObject.outputSpeech.text = speech;
+    this.responseObject.response.outputSpeech.text = speech;
 
     //  Defining action
     this.responseObject.response.directives.type="AudioPlayer.Stop";
@@ -132,9 +132,6 @@ var streamResponse = function(req,res,data){
 
 function buildStreamResponse(req,res){
   askShoutcast(req, function(data){
-
-    responseObject.response.outputSpeech.text = finalspeech;
-    res.json(responseObject);
 
     var sres = new streamResponse(req,res,data);
     sres.play();
