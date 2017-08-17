@@ -5,8 +5,8 @@ function askShoutcast(req, cb){
   srequest.post({
     url:'http://optout.shoutcast.com/radioinfo.cfm',
     form:{
-      "action":"uid",
-      "uid":"41CD62A6-6CFE-4AEA-9038-226715492F0A",
+      "action":"search",
+      "string":"101",
       "limit":1,
       "format":"json"
     }
