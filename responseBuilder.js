@@ -89,7 +89,7 @@ var streamResponse = function(req,res,data){
             }
           }
         }
-      ]
+      ],
       "shouldEndSession": true
     }
   };
