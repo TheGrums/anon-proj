@@ -32,8 +32,8 @@ function exceptionSpeech(data, speech){
 
   var speech2 = speech;
 
-  if(data.radios.length!=1)
-    speech2 = data.radios[0].Name+" is playing "+data.radios[0].Title;
+  if(data.radios.length==0)
+    speech2 = "I couldn't find such radio.";
 
   else if(data.radios.length>1){
     speech2 = "I found several radios, could you be more specific. Here is a sample of what I found : ";
@@ -99,6 +99,12 @@ var streamResponse = function(req,res,data){
     //  Generating adapted speech
     var speech = "Playing "+this.data.radios[0].Title+" on "+this.data.radios[0].Name;
     var finalspeech = exceptionSpeech(data,speech);
+
+    if(finalspeech!=speech){//  if we didn't find any radio or several
+      this.responseObject.directives=null;
+      this.responseObject.shhouldEndSession=false;
+      return;
+    }
 
     if(data.radios[0].UID=='undefined'||data.radios[0].UID==""){
       finalspeech = "This radio cannot be played. Ask them to provide a fucking ssl certificate or to move to shoutcast.com";
