@@ -141,6 +141,32 @@ function buildStreamResponse(req,res){
 
     var sres = new streamResponse(req,res,data);
     sres.play();
+    console.log(sres.responseObject);
+    console.log("--------");
+    console.log({
+      "version": "1.0",
+      "response": {
+        "outputSpeech": {
+          "type": "PlainText",
+          "text": "YOLO"
+        },
+        "directives": [
+          {
+            "type":"AudioPlayer.Play",
+            "playBehavior":"REPLACE_ALL",
+            "audioItem":{
+              "stream": {
+                "token":"sdlfhqsdmlfkjqsmdf",
+                "url":"https://listen.shoutcast.com/ledjamradio.mp3",
+                "offsetInMilliseconds":0
+              }
+            }
+          }
+
+        ],
+        "shouldEndSession": true
+      }
+    });
     res.json(sres.responseObject);
 
   });
