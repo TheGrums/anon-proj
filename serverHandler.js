@@ -1,27 +1,3 @@
-
-function buildResponse(req,res){
-
-  var shoutcast = require('./responseBuilder');
-
-  return res.json({
-  "version": "1.0",
-  "sessionAttributes": {
-    "supportedHoriscopePeriods": {
-      "daily": true,
-      "weekly": false,
-      "monthly": false
-    }
-  },
-  "response": {
-    "outputSpeech": {
-      "type": "PlainText",
-      "text": JSON.stringify(shoutcast.ask(req))
-    },
-    "shouldEndSession": false
-  }
-});
-}
-
 function startServer(){
 
   let express = require('express'),
@@ -52,8 +28,9 @@ function startServer(){
     next();
   });
 
-  app.post('/', function(req, res) {
-      buildResponse(req,res);
+  app.get('/', function(req, res) {
+    var responder = require('./responseBuilder');
+    responder.respond(req,res);
   });
 
   app.listen(8888);
