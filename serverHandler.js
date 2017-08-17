@@ -6,7 +6,18 @@
 
 //  This function is a kind of router for handling
 //  each intent separately
-function intentDispatcher(req){
+function intentDispatch(req,res){
+  var intentName = req.body.request.intent.name;
+  var responder = require('./responseBuilder');
+
+  switch(intentName){
+    case "getRadioTrack":
+      responder.trackResponse(req,res);
+    break;
+    case "getRadioStream":
+      responder.streamResponse(req),res
+    break;
+  }
 
 }
 
@@ -25,9 +36,7 @@ function startServer(){
 
   //  Handling post requests from amazon
   app.post('/', function(req, res) {
-    console.log(req);
-    var responder = require('./responseBuilder');
-    responder.respond(req,res);
+    intentDispatch(req,res);//  Dispatching
   });
 
   //  Listening to a specific port, 8888 is defined for testing purposes
