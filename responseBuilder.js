@@ -112,7 +112,8 @@ var streamResponse = function(req,res,data){
     this.responseObject.response.directives.type="AudioPlayer.Play";
 
     //  Adding stream informations
-    this.responseObject.response.directives.audioItem.stream.token = this.data.radios[0].Uid
+    this.responseObject.response.directives.audioItem.stream.token = this.data.radios[0].UID;
+    this.responseObject.response.directives.audioItem.stream.url = "https://listen.shoutcast.com/ledjamradio.mp3";
 
   };
 
@@ -130,6 +131,16 @@ var streamResponse = function(req,res,data){
 }
 
 function buildStreamResponse(req,res){
+  askShoutcast(req, function(data){
+
+    responseObject.response.outputSpeech.text = finalspeech;
+    res.json(responseObject);
+
+    var sres = new streamResponse(req,res,data);
+    sres.play();
+    res.json(sres.responseObject);
+
+  });
 
 }
 
