@@ -32,8 +32,8 @@ function exceptionSpeech(data, speech){
 
   var speech2 = speech;
 
-  if(data.radios.length!=1)
-    speech2 = data.radios[0].Name+" is playing "+data.radios[0].Title;
+  if(data.radios.length==0)
+    speech2 = "I couldn't find such radio.";
 
   else if(data.radios.length>1){
     speech2 = "I found several radios, could you be more specific. Here is a sample of what I found : ";
@@ -100,6 +100,12 @@ var streamResponse = function(req,res,data){
     var speech = "Playing "+this.data.radios[0].Title+" on "+this.data.radios[0].Name;
     var finalspeech = exceptionSpeech(data,speech);
 
+    if(finalspeech!=speech){//  if we didn't find any radio or several
+      this.responseObject.directives=null;
+      this.responseObject.shhouldEndSession=false;
+      return;
+    }
+
     if(data.radios[0].UID=='undefined'||data.radios[0].UID==""){
       finalspeech = "This radio cannot be played. Ask them to provide a fucking ssl certificate or to move to shoutcast.com";
       this.responseObject.directives = null;
@@ -109,7 +115,7 @@ var streamResponse = function(req,res,data){
     this.responseObject.response.outputSpeech.text = finalspeech;
 
     //  Defining action
-    this.responseObject.response.directives.type="AudioPlayer.Play";
+    this.responseObject.response.directives[0].type="AudioPlayer.Play";
 
     //  Adding stream informations
     this.responseObject.response.directives[0].audioItem.stream.token = this.data.radios[0].UID;
@@ -135,8 +141,30 @@ function buildStreamResponse(req,res){
 
     var sres = new streamResponse(req,res,data);
     sres.play();
-    console.log(sres.responseObject);
-    res.json(sres.responseObject);
+    res.json({
+      "version": "1.0",
+      "response": {
+        "outputSpeech": {
+          "type": "PlainText",
+          "text": "YOLO"
+        },
+        "directives": [
+          {
+            "type":"AudioPlayer.Play",
+            "playBehavior":"REPLACE_ALL",
+            "audioItem":{
+              "stream": {
+                "token":"sdlfhqsdmlfkjqsmdf",
+                "url":"https://listen.shoutcast.com/ledjamradio.mp3",
+                "offsetInMilliseconds":0
+              }
+            }
+          }
+
+        ],
+        "shouldEndSession": true
+      }
+    });
 
   });
 
