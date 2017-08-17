@@ -15,7 +15,7 @@ function askShoutcast(req, cb){
     form:{
       "action":"search",
       "string":searchterm,
-      "limit":1,
+      "limit":3,
       "format":"json"
     }
   },
@@ -39,13 +39,24 @@ function buildResponse(req,res){
   }
 
   askShoutcast(req, function(data){
-    console.log(data);
-    responseObject.response.outputSpeech.text = (data.radios.length ? data.radios[0].Name+" is playing "+data.radios[0].Title:"I couldn't find such radio on shoutcast.com");
+
+    var speech = "I couldn't find such radio on shoutcast.com"; //  Here is what alexa will tell the user, default value set
+
+    if(data.radios.length==1)
+      speech = data.radios[0].Name+" is playing "+data.radios[0].Title;
+
+    else if(data.radios.length>1){
+      speech = "I found several radios, could you be more specific. Here is a sample of what I found :";
+      data.radios.forEach(function(rad){speech+=" "+rad.Name});
+    }
+
+    responseObject.response.outputSpeech.text = speech;
     res.json(responseObject);
   });
 
 }
 
+//  Exporting functions
 module.exports = {
   respond : buildResponse
 }
