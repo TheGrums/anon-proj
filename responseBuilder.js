@@ -1,7 +1,7 @@
 function askShoutcast(req, cb){
 
   var srequest = require('request');
-  var requestdata = JSON.parse(req);
+  var requestdata = req.body;
   var searchterm = requestdata.request.intent.slots.Radio.value;
 
   // Simulating <none found> in askShoutcast

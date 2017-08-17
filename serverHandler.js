@@ -28,7 +28,7 @@ function startServer(){
     next();
   });
 
-  app.get('/', function(req, res) {
+  app.post('/', function(req, res) {
     var responder = require('./responseBuilder');
     responder.respond(req,res);
   });
