@@ -135,6 +135,7 @@ function buildStreamResponse(req,res){
 
     var sres = new streamResponse(req,res,data);
     sres.play();
+    console.log(sres.responseObject);
     res.json(sres.responseObject);
 
   });
