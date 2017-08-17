@@ -130,7 +130,7 @@ var streamResponse = function(req,res,data){
     this.responseObject.response.outputSpeech.text = speech;
 
     //  Defining action
-    this.responseObject.response.directives.type="AudioPlayer.Stop";
+    this.responseObject.response.directives[0].type="AudioPlayer.Stop";
 
   };
 
@@ -141,30 +141,7 @@ function buildStreamResponse(req,res){
 
     var sres = new streamResponse(req,res,data);
     sres.play();
-    res.json({
-      "version": "1.0",
-      "response": {
-        "outputSpeech": {
-          "type": "PlainText",
-          "text": "YOLO"
-        },
-        "directives": [
-          {
-            "type":"AudioPlayer.Play",
-            "playBehavior":"REPLACE_ALL",
-            "audioItem":{
-              "stream": {
-                "token":"sdlfhqsdmlfkjqsmdf",
-                "url":"https://listen.shoutcast.com/ledjamradio.mp3",
-                "offsetInMilliseconds":0
-              }
-            }
-          }
-
-        ],
-        "shouldEndSession": true
-      }
-    });
+    res.json(sres.responseObject);
 
   });
 
