@@ -1,5 +1,8 @@
 
-function buildResponse(res){
+function buildResponse(req,res){
+
+  var shoutcast = require('./responseBuilder');
+
   return res.json({
   "version": "1.0",
   "sessionAttributes": {
@@ -12,7 +15,7 @@ function buildResponse(res){
   "response": {
     "outputSpeech": {
       "type": "PlainText",
-      "text": "Today will provide you a new learning opportunity.  Stick with it and the possibilities will be endless. Can I help you with anything else?"
+      "text": JSON.stringify(shoutcast.ask(req))
     },
     "shouldEndSession": false
   }
@@ -49,8 +52,8 @@ function startServer(){
     next();
   });
 
-  app.post('/', requestVerifier, function(req, res) {
-      buildResponse(res);
+  app.post('/', function(req, res) {
+      buildResponse(req,res);
   });
 
   app.listen(8888);
