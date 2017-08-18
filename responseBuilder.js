@@ -129,7 +129,7 @@ function exceptionSpeech(data, speech){
 
   var speech2 = speech;
 
-  if(data.length||data.radios.length==0)
+  if(!data.radios||data.radios.length==0)
     speech2 = "I couldn't find such radio.";
 
   else if(data.radios.length>1){
