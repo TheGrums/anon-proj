@@ -55,7 +55,7 @@ var streamResponse = function(req,res,data){
 }
 
 
-/*  Returning void - calling an ENDPOINT function as callback */
+/*  Returning void */
 function askShoutcast(req, cb){
 
   var srequest = require('request');
@@ -124,45 +124,45 @@ function exceptionSpeech(data, speech){
 
 
 //  Having alexa talking, answering a question to get the track name played by a radio
-//  callback function is supposed to send a server response and take json body as argument
+//  callback function (cb) is supposed to send a server response and take json body as argument (in the following functions)
 
 /*  Returning void */
 function trackRespond(req,res,cb){
 
-  var responseObject =
-  {
-    "version": "1.0",
-    "response": {
-      "outputSpeech": {
-        "type": "PlainText"
-      },
-      "shouldEndSession": false
-    }
-  }
+
 
   askShoutcast(req, (data)=>{
 
-    var speech = data.radios[0].Name+" is playing "+data.radios[0].Title; //  Here is what alexa will tell the user, default value set
-    var finalspeech = exceptionSpeech(data,speech);
-
-    responseObject.response.outputSpeech.text = finalspeech;
-    cb(responseObject);
+    var man = require('./objectsCollection');
+    var finalspeech = (exceptionSpeech(data,"")==""?exceptionSpeech(data,""):data.radios[0].Name+" is playing "+data.radios[0].Title);
+    cb(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(speech))));
 
   });
 
 }
 
-
 //  Asking alexa to start playing a stream
-//  callback function is supposed to send a server response and take json body as argument
-
 /*  Returning void */
 function streamPlayRespond(req,res,cb){
   askShoutcast(req, (data)=>{
     var sres = new streamResponse(req,res,data);
     cb(sres.play());
   });
+}
 
+//  Asking alexa to stop playing a stream
+/*  Returning void */
+function streamStopRespond(req,res,cb){
+  var sres = new streamResponse(req,res,{});
+  cb(sres.stop());
+}
+
+
+//  Having alexa talking
+/*  Returning void */
+function simpleSpeechRespond(text,req,res,cb){
+  var man = require('./objectsCollection');
+  cb(new man.responseObject(new man.Response(true,[],new man.OutputSpeech(text))));
 }
 
 //  Exporting functions

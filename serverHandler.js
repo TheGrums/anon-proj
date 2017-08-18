@@ -3,6 +3,30 @@
   the skill logic is not contained here, have a look at responseBuilder.js instead
 */
 
+//  This function is a router-like function
+//  to handle different types of requests
+function requestDispatch(req, res, cb){
+  var requestType = req.body.request.type;
+  var responder = require('./responseBuilder');
+
+  switch(requestType){
+    case "IntentRequest":
+      intentDispatch(req,res,cb);
+    break;
+    case "PlaybackController.PauseCommandIssued":
+      responder.streamStopRespond(req,res,cb);
+    break;
+    case "PlaybackController.PlayCommandIssued":
+      responder.simpleSpeechRespond("Please specify the radio station you want to listen to.",req,res,cb);
+    break;
+    case "LaunchRequest":
+    break;
+    default:
+      responder.simpleSpeechRespond("This functionality is not available.");
+    break;
+  }
+}
+
 
 //  This function is a kind of router for handling
 //  each intent separately
@@ -37,7 +61,7 @@ function startServer(){
   //  Handling post requests from amazon
   app.post('/', function(req, res) {
     console.log("-- REQUEST --");console.log(JSON.stringify(req.body, null, 2));
-    intentDispatch(req,res, (jsonBody)=>{console.log("-- RESPONSE --");console.log(JSON.stringify(jsonBody, null, 2));res.json(jsonBody);} );//  Dispatching and responding
+    requestDispatch(req,res, (jsonBody)=>{console.log("-- RESPONSE --");console.log(JSON.stringify(jsonBody, null, 2));res.json(jsonBody);} );//  Dispatching and responding
   });
 
   //  Listening to a specific port, 8888 is defined for testing purposes
