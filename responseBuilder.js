@@ -76,7 +76,7 @@ function getStreamUrl(resobj,cb){
     }
   },
   function(err,res,body){
-    resobj.response.directives[0].audioItem.stream.url = JSON.parse(body).radios[0].Streamurl;
+    resobj.response.directives[0].audioItem.stream.url = "https://listen.shoutcast.com/"+JSON.parse(body).radios[0].RadUrl;
     cb(resobj);
   });
 
@@ -129,7 +129,7 @@ function exceptionSpeech(data, speech){
 
   var speech2 = speech;
 
-  if(data.radios.length==0)
+  if(data.length||data.radios.length==0)
     speech2 = "I couldn't find such radio.";
 
   else if(data.radios.length>1){
