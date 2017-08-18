@@ -1,3 +1,58 @@
+//  Creating an Object to answer a stream request with more flexibility
+//  Currently covering play and stop functions
+var streamResponse = function(req,res,data){
+
+  this.req = req;
+  this.res = res;
+  this.data = data;
+  this.man = require('./objectsCollection');
+
+  this.play = function(){
+
+    //  Lazyness
+    var man = this.man;
+
+    //  Those variables are to be sub-components of the responseObject
+    var stream = {}, response = {}, outspeech = {}, directive = {}, audioItem = {};
+
+    //  Generating adapted speech
+    var speech = "Playing "+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+" on "+this.data.radios[0].Name;
+    var finalspeech = exceptionSpeech(data,speech);
+
+    //  Checking radio validity
+    if(validRadio(this.data.radios[0]))finalspeech = "This radio cannot be played.";
+
+    if(finalspeech!=speech){//  if we didn't find any radio or several or only invalid radios
+      response=new man.Response(false, {}, new man.OutputSpeech(finalspeech));
+      return new man.responseObject(response);
+    }
+
+    //  Building the response object step by step
+    outspeech = new man.OutputSpeech(finalspeech);
+
+    stream = new man.Stream(this.data.radios[0].UID, "https://listen.shoutcast.com/ledjamradio.mp3", 0);
+
+    audioItem = new man.AudioItem(stream);
+
+    directive = new man.Directive("REPLACE_ALL",audioItem,"AudioPlayer.Play");
+
+    response = new man.Response(true,new Array(directive),outspeech);
+
+    return new man.responseObject(response);
+
+  };
+
+  this.stop = function(){
+    var man = this.man;
+    //  Wait for it...
+    return new man.responseObject(new man.Response(false,new Array(new man.Directive(null,null,"AudioPlayer.Stop"),new man.OutputSpeech(speech))));
+    //  Booom !
+  };
+
+}
+
+
+/*  Returning void - calling an ENDPOINT function as callback */
 function askShoutcast(req, cb){
 
   var srequest = require('request');
@@ -17,7 +72,8 @@ function askShoutcast(req, cb){
       "string":searchterm,
       "limit":3,
       "format":"json",
-      "extended":"yes"
+      "extended":"yes",
+      "caller":"alexa"
     }
   },
   function(err,res,body){
@@ -26,8 +82,18 @@ function askShoutcast(req, cb){
 
 }
 
+//  This function is used to determine weither the radio can be played
+//  Checking if it has an uid and a valid ssl certificate
+
+/*  Returning bool */
+function validRadio(radioData){
+
+}
+
 //  This function modifies the speech data only if needed
 //  (if no radio or several radios have been found)
+
+/*  Returning string */
 function exceptionSpeech(data, speech){
 
   var speech2 = speech;
@@ -45,7 +111,12 @@ function exceptionSpeech(data, speech){
 
 }
 
-function buildTrackResponse(req,res){
+
+//  Having alexa talking, answering a question to get the track name played by a radio
+//  callback function is supposed to send a server response and take json body as argument
+
+/*  Returning void */
+function trackRespond(req,res,cb){
 
   var responseObject =
   {
@@ -58,99 +129,33 @@ function buildTrackResponse(req,res){
     }
   }
 
-  askShoutcast(req, function(data){
+  askShoutcast(req, (data)=>{
 
     var speech = data.radios[0].Name+" is playing "+data.radios[0].Title; //  Here is what alexa will tell the user, default value set
     var finalspeech = exceptionSpeech(data,speech);
 
     responseObject.response.outputSpeech.text = finalspeech;
-    res.json(responseObject);
+    cb(responseObject);
+
   });
 
 }
 
-var streamResponse = function(req,res,data){
 
-  this.req = req;
-  this.res = res;
-  this.data = data;
-  this.responseObject = {
-    "version": "1.0",
-    "response": {
-      "outputSpeech": {
-        "type": "PlainText"
-      },
-      "directives": [
-        {
-          "playBehavior":"REPLACE_ALL",
-          "audioItem":{
-            "stream": {
-              "offsetInMilliseconds":0
-            }
-          }
-        }
-      ],
-      "shouldEndSession": true
-    }
-  };
+//  Asking alexa to start playing a stream
+//  callback function is supposed to send a server response and take json body as argument
 
-  this.play = function(){
-
-    //  Generating adapted speech
-    var speech = "Playing "+this.data.radios[0].Title+" on "+this.data.radios[0].Name;
-    var finalspeech = exceptionSpeech(data,speech);
-
-    if(finalspeech!=speech){//  if we didn't find any radio or several
-      this.responseObject.response.outputSpeech.text=finalspeech;
-      this.responseObject.response.shouldEndSession=false;
-      delete this.responseObject.response.directives;
-      return;
-    }
-
-    if(data.radios[0].UID=='undefined'||data.radios[0].UID==""){
-      finalspeech = "This radio cannot be played.";
-      this.responseObject.response.outputSpeech.text = finalspeech;
-      delete this.responseObject.response.directives;
-      return;
-    }
-
-    this.responseObject.response.outputSpeech.text = finalspeech;
-
-    //  Defining action
-    this.responseObject.response.directives[0].type="AudioPlayer.Play";
-
-    //  Adding stream informations
-    this.responseObject.response.directives[0].audioItem.stream.token = this.data.radios[0].UID;
-    this.responseObject.response.directives[0].audioItem.stream.url = "https://listen.shoutcast.com/ledjamradio.mp3";
-
-  };
-
-  this.stop = function(){
-
-    //  Generating adapted speech
-    var speech = "";
-    this.responseObject.response.outputSpeech.text = speech;
-
-    //  Defining action
-    this.responseObject.response.directives[0].type="AudioPlayer.Stop";
-
-  };
-
-}
-
-function buildStreamResponse(req,res){
-  askShoutcast(req, function(data){
-
+/*  Returning void */
+function streamPlayRespond(req,res,cb){
+  askShoutcast(req, (data)=>{
     var sres = new streamResponse(req,res,data);
-    sres.play();
-    res.json(sres.responseObject);
-
+    cb(sres.play());
   });
 
 }
 
 //  Exporting functions
 module.exports = {
-  trackResponse : buildTrackResponse,
-  streamResponse : buildStreamResponse
+  trackRespond : trackRespond,
+  streamPlayRespond : streamPlayRespond
 }
