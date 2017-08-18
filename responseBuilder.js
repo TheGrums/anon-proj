@@ -101,14 +101,16 @@ var streamResponse = function(req,res,data){
     var finalspeech = exceptionSpeech(data,speech);
 
     if(finalspeech!=speech){//  if we didn't find any radio or several
+      this.responseObject.response.outputSpeech.text=finalspeech;
       this.responseObject.directives=null;
-      this.responseObject.shhouldEndSession=false;
+      this.responseObject.shouldEndSession=false;
       return;
     }
 
     if(data.radios[0].UID=='undefined'||data.radios[0].UID==""){
-      finalspeech = "This radio cannot be played. Ask them to provide a fucking ssl certificate or to move to shoutcast.com";
-      this.responseObject.directives = null;
+      finalspeech = "This radio cannot be played.";
+      this.responseObject.response.outputSpeech.text = finalspeech;
+      this.responseObject.response.directives = null;
       return;
     }
 
