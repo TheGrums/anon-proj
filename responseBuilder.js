@@ -72,7 +72,7 @@ function askShoutcast(req, cb){
     url:'http://optout.shoutcast.com/radioinfo.cfm',
     form:{
       "action":"search",
-      "string":searchterm.replace(/\s/g,''),
+      "string":searchterm,
       "limit":3,
       "format":"json",
       "extended":"yes",
