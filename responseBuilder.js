@@ -23,7 +23,7 @@ var streamResponse = function(req,res,data){
     if(validRadio(this.data.radios[0]))finalspeech = "This radio cannot be played.";
 
     if(finalspeech!=speech){//  if we didn't find any radio or several or only invalid radios
-      response=new man.Response(false, {}, new man.OutputSpeech(finalspeech));
+      response=new man.Response(false, [], new man.OutputSpeech(finalspeech));
       return new man.responseObject(response);
     }
     else {
@@ -39,7 +39,7 @@ var streamResponse = function(req,res,data){
 
     directive = new man.Directive("REPLACE_ALL",audioItem,"AudioPlayer.Play");
 
-    response = new man.Response(true,new Array(directive),outspeech);
+    response = new man.Response(true,[directive],outspeech);
 
     return new man.responseObject(response);
 
@@ -48,7 +48,7 @@ var streamResponse = function(req,res,data){
   this.stop = function(){
     var man = this.man;
     //  Wait for it...
-    return new man.responseObject(new man.Response(false,new Array(new man.Directive(null,null,"AudioPlayer.Stop"),new man.OutputSpeech(speech))));
+    return new man.responseObject(new man.Response(false,[new man.Directive(null,null,"AudioPlayer.Stop")],new man.OutputSpeech(speech)));
     //  Booom !
   };
 
