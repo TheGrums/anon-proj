@@ -19,10 +19,8 @@ function requestDispatch(req, res, cb){
     case "PlaybackController.PlayCommandIssued":
       responder.simpleSpeechRespond("Please specify the radio station you want to listen to.",req,res,cb);
     break;
-    case "LaunchRequest":
-    break;
     default:
-      responder.simpleSpeechRespond("This functionality is not available.");
+      responder.simpleSpeechRespond("This functionality is not available.",req,res,cb);
     break;
   }
 }
@@ -40,6 +38,9 @@ function intentDispatch(req,res,cb){
     break;
     case "getRadioStream":
       responder.streamPlayRespond(req,res,cb);
+    break;
+    case "AMAZON.PauseIntent":
+      responder.streamStopRespond(req,res,cb);
     break;
   }
 
