@@ -48,7 +48,7 @@ var streamResponse = function(req,res,data){
   this.stop = function(){
     var man = this.man;
     //  Wait for it...
-    return new man.responseObject(new man.Response(false,[new man.Directive(null,null,"AudioPlayer.Stop")],new man.OutputSpeech(speech)));
+    return new man.responseObject(new man.Response(false,[new man.Directive(null,null,"AudioPlayer.Stop")]));
     //  Booom !
   };
 
