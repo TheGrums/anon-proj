@@ -102,15 +102,15 @@ var streamResponse = function(req,res,data){
 
     if(finalspeech!=speech){//  if we didn't find any radio or several
       this.responseObject.response.outputSpeech.text=finalspeech;
-      this.responseObject.directives=null;
-      this.responseObject.shouldEndSession=false;
+      this.responseObject.response.shouldEndSession=false;
+      delete this.responseObject.response.directives;
       return;
     }
 
     if(data.radios[0].UID=='undefined'||data.radios[0].UID==""){
       finalspeech = "This radio cannot be played.";
       this.responseObject.response.outputSpeech.text = finalspeech;
-      this.responseObject.response.directives = null;
+      delete this.responseObject.response.directives;
       return;
     }
 
@@ -143,33 +143,6 @@ function buildStreamResponse(req,res){
 
     var sres = new streamResponse(req,res,data);
     sres.play();
-    console.log("*--------*");
-    console.log(sres.responseObject);
-    console.log("--------");
-    console.log({
-      "version": "1.0",
-      "response": {
-        "outputSpeech": {
-          "type": "PlainText",
-          "text": "YOLO"
-        },
-        "directives": [
-          {
-            "type":"AudioPlayer.Play",
-            "playBehavior":"REPLACE_ALL",
-            "audioItem":{
-              "stream": {
-                "token":"sdlfhqsdmlfkjqsmdf",
-                "url":"https://listen.shoutcast.com/ledjamradio.mp3",
-                "offsetInMilliseconds":0
-              }
-            }
-          }
-
-        ],
-        "shouldEndSession": true
-      }
-    });
     res.json(sres.responseObject);
 
   });
