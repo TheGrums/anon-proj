@@ -36,7 +36,8 @@ function startServer(){
 
   //  Handling post requests from amazon
   app.post('/', function(req, res) {
-    intentDispatch(req,res, (jsonBody)=>{res.json(jsonBody);} );//  Dispatching and responding
+    console.log("-- REQUEST --");console.log(JSON.stringify(req.body, null, 2));
+    intentDispatch(req,res, (jsonBody)=>{console.log("-- RESPONSE --");console.log(JSON.stringify(jsonBody, null, 2));res.json(jsonBody);} );//  Dispatching and responding
   });
 
   //  Listening to a specific port, 8888 is defined for testing purposes

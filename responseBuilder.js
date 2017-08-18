@@ -80,6 +80,7 @@ function askShoutcast(req, cb){
     }
   },
   function(err,res,body){
+    console.log("-- SHOUTCAST RESPONSE --");console.log(JSON.stringify(body, null, 2));
     cb(JSON.parse(body));
   });
 
