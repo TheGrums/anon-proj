@@ -7,7 +7,7 @@ var streamResponse = function(req,res,data){
   this.data = data;
   this.man = require('./objectsCollection');
 
-  this.play = function(){
+  this.play = function(cb){
 
     //  Lazyness
     var man = this.man;
@@ -19,8 +19,8 @@ var streamResponse = function(req,res,data){
     var speech = "Playing music from shoutcast.com";
     var finalspeech = exceptionSpeech(data,speech);
 
-    //  Checking radio validity
-    if(validRadio(this.data.radios[0]))finalspeech = "This radio cannot be played.";
+    //  Checking radio validity, if we have results but they do not have any uid
+    if(finalspeech==speech&&(this.data.radios[0].UID==""||!Boolean(this.data.radios[0])))finalspeech = "This radio station cannot be played.";
 
     if(finalspeech!=speech){//  if we didn't find any radio or several or only invalid radios
       response=new man.Response(false, [], new man.OutputSpeech(finalspeech));
@@ -33,7 +33,7 @@ var streamResponse = function(req,res,data){
     //  Building the response object step by step
     outspeech = new man.OutputSpeech(finalspeech);
 
-    stream = new man.Stream(this.data.radios[0].UID, "https://listen.shoutcast.com/ledjamradio.mp3", 0);
+    stream = new man.Stream(this.data.radios[0].UID, "", 0);
 
     audioItem = new man.AudioItem(stream);
 
@@ -49,11 +49,38 @@ var streamResponse = function(req,res,data){
     var man = this.man;
     //  Wait for it...
     return new man.responseObject(new man.Response(false,[new man.Directive(null,null,"AudioPlayer.Stop")]));
-    //  Booom !
+    //  Tadaaaam !
   };
 
 }
 
+function getStreamUrl(resobj,cb){
+
+  console.log(JSON.stringify(resobj,null,2));
+  if(!resobj.response.directives.length){ //  Avoid processing exception responses
+    cb(resobj);
+    return;
+  }
+
+  var sreq = require('request');
+
+  sreq.post({
+    url:'http://optout.shoutcast.com/radioinfo.cfm',
+    form:{
+      "action":"uid",
+      "uid":resobj.response.directives[0].audioItem.stream.token,
+      "limit":3,
+      "format":"json",
+      "extended":"yes",
+      "caller":"alexa"
+    }
+  },
+  function(err,res,body){
+    resobj.response.directives[0].audioItem.stream.url = JSON.parse(body).radios[0].Streamurl;
+    cb(resobj);
+  });
+
+}
 
 /*  Returning void */
 function askShoutcast(req, cb){
@@ -67,9 +94,10 @@ function askShoutcast(req, cb){
     cb(JSON.parse({radios:[]}));
     return;
   }
-  console.log("-- SHOUTCAST REQUEST --");console.log(JSON.stringify({
-    "action":"search",
-    "string":searchterm,
+  console.log("-- SHOUTCAST REQUEST --");
+  console.log(JSON.stringify({
+    "action":"advancedsearch",
+    "station":searchterm,
     "limit":3,
     "format":"json",
     "extended":"yes",
@@ -90,14 +118,6 @@ function askShoutcast(req, cb){
     console.log("-- SHOUTCAST RESPONSE --");console.log(JSON.stringify(JSON.parse(body), null, 2));
     cb(JSON.parse(body));
   });
-
-}
-
-//  This function is used to determine weither the radio can be played
-//  Checking if it has an uid and a valid ssl certificate
-
-/*  Returning bool */
-function validRadio(radioData){
 
 }
 
@@ -128,9 +148,6 @@ function exceptionSpeech(data, speech){
 
 /*  Returning void */
 function trackRespond(req,res,cb){
-
-
-
   askShoutcast(req, (data)=>{
 
     var man = require('./objectsCollection');
@@ -146,7 +163,7 @@ function trackRespond(req,res,cb){
 function streamPlayRespond(req,res,cb){
   askShoutcast(req, (data)=>{
     var sres = new streamResponse(req,res,data);
-    cb(sres.play());
+    getStreamUrl(sres.play(),(resobj)=>{ cb(resobj); }); //  Callback executed after last external request (getting streamUrl)
   });
 }
 

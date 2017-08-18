@@ -20,7 +20,7 @@ function requestDispatch(req, res, cb){
       responder.simpleSpeechRespond("Please specify the radio station you want to listen to.",req,res,cb);
     break;
     default:
-      responder.simpleSpeechRespond("This functionality is not available.",req,res,cb);
+      res.send();
     break;
   }
 }
