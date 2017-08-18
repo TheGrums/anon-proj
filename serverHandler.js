@@ -36,7 +36,7 @@ function startServer(){
 
   //  Handling post requests from amazon
   app.post('/', function(req, res) {
-    console.log(req.body);
+    console.log(JSON.stringify(req.body,null,2));
     intentDispatch(req,res);//  Dispatching
   });
 

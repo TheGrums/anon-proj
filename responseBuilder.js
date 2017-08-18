@@ -143,6 +143,7 @@ function buildStreamResponse(req,res){
 
     var sres = new streamResponse(req,res,data);
     sres.play();
+    console.log("*--------*");
     console.log(sres.responseObject);
     console.log("--------");
     console.log({
