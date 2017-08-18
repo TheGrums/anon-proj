@@ -16,7 +16,7 @@ var streamResponse = function(req,res,data){
     var stream = {}, response = {}, outspeech = {}, directive = {}, audioItem = {};
 
     //  Generating adapted speech
-    var speech = "Playing "+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+" on "+this.data.radios[0].Name;
+    var speech = "Playing music from shoutcast.com";
     var finalspeech = exceptionSpeech(data,speech);
 
     //  Checking radio validity
@@ -25,6 +25,9 @@ var streamResponse = function(req,res,data){
     if(finalspeech!=speech){//  if we didn't find any radio or several or only invalid radios
       response=new man.Response(false, {}, new man.OutputSpeech(finalspeech));
       return new man.responseObject(response);
+    }
+    else {
+      finalspeech = "Playing "+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+" on "+this.data.radios[0].Name;
     }
 
     //  Building the response object step by step
