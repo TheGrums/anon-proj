@@ -67,7 +67,14 @@ function askShoutcast(req, cb){
     cb(JSON.parse({radios:[]}));
     return;
   }
-
+  console.log("-- SHOUTCAST REQUEST --");console.log(JSON.stringify({
+    "action":"search",
+    "string":searchterm,
+    "limit":3,
+    "format":"json",
+    "extended":"yes",
+    "caller":"alexa"
+  }, null, 2));
   srequest.post({
     url:'http://optout.shoutcast.com/radioinfo.cfm',
     form:{
@@ -80,7 +87,7 @@ function askShoutcast(req, cb){
     }
   },
   function(err,res,body){
-    console.log("-- SHOUTCAST RESPONSE --");console.log(JSON.stringify(body, null, 2));
+    console.log("-- SHOUTCAST RESPONSE --");console.log(JSON.stringify(JSON.parse(body), null, 2));
     cb(JSON.parse(body));
   });
 
