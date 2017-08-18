@@ -168,5 +168,6 @@ function simpleSpeechRespond(text,req,res,cb){
 //  Exporting functions
 module.exports = {
   trackRespond : trackRespond,
-  streamPlayRespond : streamPlayRespond
+  streamPlayRespond : streamPlayRespond,
+  simpleSpeechRespond : simpleSpeechRespond
 }
