@@ -151,7 +151,7 @@ function trackRespond(req,res,cb){
   askShoutcast(req, (data)=>{
 
     var man = require('./objectsCollection');
-    var finalspeech = (exceptionSpeech(data,"")==""?exceptionSpeech(data,""):data.radios[0].Name+" is playing "+data.radios[0].Title);
+    var finalspeech = (exceptionSpeech(data,"")==""||!data.radios?exceptionSpeech(data,""):data.radios[0].Name+" is playing "+data.radios[0].Title);
     cb(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(speech))));
 
   });
