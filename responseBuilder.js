@@ -145,7 +145,12 @@ function trackRespond(req,res,cb){
   askShoutcast(req, (data)=>{
 
     var man = require('./objectsCollection');
-    filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);
+    try{
+      filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);
+    }
+    catch(err){
+      throw err;
+    }
 
   });
 
