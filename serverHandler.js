@@ -3,6 +3,8 @@
   the skill logic is not contained here, have a look at responseBuilder.js instead
 */
 
+// AudioPlayer.PlaybackStarted
+
 //  This function is a router-like function
 //  to handle different types of requests
 function requestDispatch(req, res, cb){
@@ -11,11 +13,8 @@ function requestDispatch(req, res, cb){
 
   switch(requestType){
     case "IntentRequest":
-      try{
-        intentDispatch(req,res,cb);
-      }catch(err){
-        throw err;
-      }
+      try intentDispatch(req,res,cb);
+      catch(err) throw err;
     break;
     case "PlaybackController.PauseCommandIssued":
       responder.streamStopRespond(req,res,cb);
@@ -45,7 +44,7 @@ function intentDispatch(req,res,cb){
     break;
     case "getRadioStream":
       responder.streamPlayRespond(req,res,cb);
-    break;
+   break;
     case "AMAZON.PauseIntent":
       responder.streamStopRespond(req,res,cb);
     break;

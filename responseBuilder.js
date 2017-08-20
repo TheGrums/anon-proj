@@ -42,7 +42,7 @@ var streamResponse = function(req,res,data){
   this.stop = function(){
     var man = this.man;
     //  Wait for it...
-    return new man.responseObject(new man.Response(false,[new man.PlayDirective(null,null,"AudioPlayer.Stop")]));
+    return new man.responseObject(new man.Response(true,[new man.PlayDirective(null,null,"AudioPlayer.Stop")]));
     //  Tadaaaam !
   };
 
@@ -145,16 +145,14 @@ function trackRespond(req,res,cb){
   askShoutcast(req, (data)=>{
 
     var man = require('./objectsCollection');
-    try{
-      filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);
-    }
-    catch(err){
-      throw err;
-    }
+    try filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);
+    catch(err) simpleSpeechRespond(err,req,res,cb);
 
   });
 
 }
+
+//  Needs review for purity
 
 //  Asking alexa to start playing a stream
 /*  Returning void */
@@ -162,11 +160,13 @@ function streamPlayRespond(req,res,cb){
   askShoutcast(req, (data)=>{
     var sres = new streamResponse(req,res,data);
 
-    filterData(data,req,(cbfunc,stresponse)=>{
+    try filterData(data,req,(cbfunc,stresponse)=>{
       getStreamUrl(stresponse[0].play(),(resobj,cbfunc)=>{
         cbfunc(resobj);
       },cbfunc);
     },cb,sres); //  Callback executed after last external request (getting streamUrl)
+
+    catch(err) simpleSpeechRespond(err,req,res,cb);
 
   });
 }
