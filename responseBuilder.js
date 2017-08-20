@@ -123,7 +123,7 @@ function askShoutcast(req, cb){
 function filterData(data,req,cb1,cbarg,...args){
 
   if(!data.radios||!data.radios.length){
-    throw new "I couldn't find such radio.";
+    throw "I couldn't find such radio.";
   }
   else if(data.radios.length>1){
     var man = require('./objectsCollection');
