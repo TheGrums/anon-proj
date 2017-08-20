@@ -17,27 +17,21 @@ var streamResponse = function(req,res,data){
 
     //  Generating adapted speech
     var speech = "Playing music from shoutcast.com";
-    var finalspeech = exceptionSpeech(data,speech);
 
     //  Checking radio validity, if we have results but they do not have any uid
-    if(finalspeech==speech&&(this.data.radios[0].UID==""||!Boolean(this.data.radios[0])))finalspeech = "This radio station cannot be played.";
+    // if(finalspeech==speech&&(this.data.radios[0].UID==""||!Boolean(this.data.radios[0])))finalspeech = "This radio station cannot be played.";
 
-    if(finalspeech!=speech){//  if we didn't find any radio or several or only invalid radios
-      response=new man.Response(false, [], new man.OutputSpeech(finalspeech));
-      return new man.responseObject(response);
-    }
-    else {
-      finalspeech = "Playing "+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+" on "+this.data.radios[0].Name;
-    }
+
+    var speech = "Playing "+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+" on "+this.data.radios[0].Name;
 
     //  Building the response object step by step
-    outspeech = new man.OutputSpeech(finalspeech);
+    outspeech = new man.OutputSpeech(speech);
 
     stream = new man.Stream(this.data.radios[0].UID, "", 0);
 
     audioItem = new man.AudioItem(stream);
 
-    directive = new man.Directive("REPLACE_ALL",audioItem,"AudioPlayer.Play");
+    directive = new man.PlayDirective("REPLACE_ALL",audioItem,"AudioPlayer.Play");
 
     response = new man.Response(true,[directive],outspeech);
 
@@ -48,17 +42,17 @@ var streamResponse = function(req,res,data){
   this.stop = function(){
     var man = this.man;
     //  Wait for it...
-    return new man.responseObject(new man.Response(false,[new man.Directive(null,null,"AudioPlayer.Stop")]));
+    return new man.responseObject(new man.Response(false,[new man.PlayDirective(null,null,"AudioPlayer.Stop")]));
     //  Tadaaaam !
   };
 
 }
 
-function getStreamUrl(resobj,cb){
+function getStreamUrl(resobj,cb,cbarg){
 
   console.log(JSON.stringify(resobj,null,2));
   if(!resobj.response.directives.length){ //  Avoid processing exception responses
-    cb(resobj);
+    cb(resobj,cbarg);
     return;
   }
 
@@ -77,7 +71,7 @@ function getStreamUrl(resobj,cb){
   },
   function(err,res,body){
     resobj.response.directives[0].audioItem.stream.url = "https://listen.shoutcast.com/"+JSON.parse(body).radios[0].RadUrl;
-    cb(resobj);
+    cb(resobj,cbarg);
   });
 
 }
@@ -121,27 +115,27 @@ function askShoutcast(req, cb){
 
 }
 
-//  This function modifies the speech data only if needed
-//  (if no radio or several radios have been found)
+//  This function acts like a filter, it throws errors for specific cases (UID missing, no radios found)
+//  and executes a callback function that accepts another function as argument (cbarg) (mostly the original callback function that executes res.json())
+//  that's tricky but made to keep a pure function
+//  do not use this function unless you understand how it works
 
-/*  Returning string */
-function exceptionSpeech(data, speech){
+function filterData(data,req,cb1,cbarg,...args){
 
-  var speech2 = speech;
-
-  if(!data.radios||data.radios.length==0)
-    speech2 = "I couldn't find such radio.";
-
+  if(!data.radios||!data.radios.length){
+    throw new "I couldn't find such radio.";
+  }
   else if(data.radios.length>1){
-    speech2 = "I found several radios, could you be more specific. Here is a sample of what I found : ";
-    data.radios.forEach(function(rad){speech2+=rad.Name+", "});
-    speech2[-2]='.';
+    var man = require('./objectsCollection');
+    var msg = "I found several radios, could you be more specific ? Here is a sample of what I've found :";
+    data.radios.forEach((a)=>{msg+=" "+a.Name+",";});
+    cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",new man.Intent(req.body.request.intent.name,new man.Slot("Radio")),"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
+  }
+  else{
+    cb1(cbarg,args);
   }
 
-  return speech2;
-
 }
-
 
 //  Having alexa talking, answering a question to get the track name played by a radio
 //  callback function (cb) is supposed to send a server response and take json body as argument (in the following functions)
@@ -151,8 +145,7 @@ function trackRespond(req,res,cb){
   askShoutcast(req, (data)=>{
 
     var man = require('./objectsCollection');
-    var finalspeech = (exceptionSpeech(data,"")==""||!data.radios?exceptionSpeech(data,""):data.radios[0].Name+" is playing "+data.radios[0].Title);
-    cb(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(finalspeech))));
+    filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);
 
   });
 
@@ -163,7 +156,13 @@ function trackRespond(req,res,cb){
 function streamPlayRespond(req,res,cb){
   askShoutcast(req, (data)=>{
     var sres = new streamResponse(req,res,data);
-    getStreamUrl(sres.play(),(resobj)=>{ cb(resobj); }); //  Callback executed after last external request (getting streamUrl)
+
+    filterData(data,req,(cbfunc,stresponse)=>{
+      getStreamUrl(stresponse[0].play(),(resobj,cbfunc)=>{
+        cbfunc(resobj);
+      },cbfunc);
+    },cb,sres); //  Callback executed after last external request (getting streamUrl)
+
   });
 }
 

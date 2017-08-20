@@ -13,10 +13,27 @@ var AudioItem = function(stream){ // Stream object
   this.stream = stream;
 }
 
-var Directive = function(playBehavior,audioItem,type){ // String, AudioItem object, string
+var PlayDirective = function(playBehavior,audioItem,type){ // String, AudioItem object, string
   this.audioItem = audioItem;
   this.playBehavior = playBehavior;
   this.type = type;
+}
+
+var ElicitDirective = function(slotToElicit, updatedIntent, type){
+  this.slotToElicit = slotToElicit;
+  this.updatedIntent = updatedIntent;
+  this.type = type;
+}
+
+var Slot = function(name){
+  this.name = name;
+  this.confirmationStatus = "NONE";
+}
+
+var Intent = function(name,slots){//  slots has to be a list of Slot objects
+  this.name = name;
+  this.confirmationStatus = "NONE";
+  this.slots = slots;
 }
 
 var OutputSpeech = function(text){  // String
@@ -38,7 +55,10 @@ var responseObject = function(response){ // Response object
 module.exports = {
   Stream : Stream,
   AudioItem : AudioItem,
-  Directive : Directive,
+  PlayDirective : PlayDirective,
+  Slot : Slot,
+  ElicitDirective : ElicitDirective,
+  Intent : Intent,
   OutputSpeech : OutputSpeech,
   Response : Response,
   responseObject: responseObject

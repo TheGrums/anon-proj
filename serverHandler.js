@@ -17,10 +17,13 @@ function requestDispatch(req, res, cb){
       responder.streamStopRespond(req,res,cb);
     break;
     case "PlaybackController.PlayCommandIssued":
-      responder.simpleSpeechRespond("Please specify the radio station you want to listen to.",req,res,cb);
+      throw "Please specify the radio station you want to listen to.";
+    break;
+    case "LaunchRequest":
+      throw "Ready to listen";
     break;
     default:
-      res.send();
+      throw "This functionality is not implemented yet.";
     break;
   }
 }
@@ -42,6 +45,9 @@ function intentDispatch(req,res,cb){
     case "AMAZON.PauseIntent":
       responder.streamStopRespond(req,res,cb);
     break;
+    default:
+      throw "This functionality is not implemented yet.";
+    break;
   }
 
 }
@@ -62,7 +68,13 @@ function startServer(){
   //  Handling post requests from amazon
   app.post('/', function(req, res) {
     console.log("-- REQUEST --");console.log(JSON.stringify(req.body, null, 2));
-    requestDispatch(req,res, (jsonBody)=>{console.log("-- RESPONSE --");console.log(JSON.stringify(jsonBody, null, 2));res.json(jsonBody);} );//  Dispatching and responding
+    try{
+      requestDispatch(req,res, (jsonBody)=>{console.log("-- RESPONSE --");console.log(JSON.stringify(jsonBody, null, 2));res.json(jsonBody);} );//  Dispatching and responding
+    }
+    catch(err){
+      var responder = require('./responseBuilder');
+      responder.simpleSpeechRespond(err,req,res,(jsonBody)=>{res.json(jsonBody)});
+    }
   });
 
   //  Listening to a specific port, 8888 is defined for testing purposes
