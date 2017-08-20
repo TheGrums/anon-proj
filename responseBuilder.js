@@ -129,7 +129,7 @@ function filterData(data,req,cb1,cbarg,...args){
     var man = require('./objectsCollection');
     var msg = "I found several radios, could you be more specific ? Here is a sample of what I've found :";
     data.radios.forEach((a)=>{msg+=" "+a.Name+",";});
-    cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",{"Radio":new man.Intent(req.body.request.intent.name,new man.Slot("Radio"))},"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
+    cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",new man.Intent(req.body.request.intent.name,{"Radio":new man.Slot("Radio")}),"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
   }
   else{
     cb1(cbarg,args);
