@@ -145,8 +145,8 @@ function trackRespond(req,res,cb){
   askShoutcast(req, (data)=>{
 
     var man = require('./objectsCollection');
-    try filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);
-    catch(err) simpleSpeechRespond(err,req,res,cb);
+    try {filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);}
+    catch(err) {simpleSpeechRespond(err,req,res,cb);}
 
   });
 
@@ -160,13 +160,13 @@ function streamPlayRespond(req,res,cb){
   askShoutcast(req, (data)=>{
     var sres = new streamResponse(req,res,data);
 
-    try filterData(data,req,(cbfunc,stresponse)=>{
+    try {filterData(data,req,(cbfunc,stresponse)=>{
       getStreamUrl(stresponse[0].play(),(resobj,cbfunc)=>{
         cbfunc(resobj);
       },cbfunc);
-    },cb,sres); //  Callback executed after last external request (getting streamUrl)
+    },cb,sres);} //  Callback executed after last external request (getting streamUrl)
 
-    catch(err) simpleSpeechRespond(err,req,res,cb);
+    catch(err) {simpleSpeechRespond(err,req,res,cb);}
 
   });
 }

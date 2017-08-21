@@ -13,8 +13,8 @@ function requestDispatch(req, res, cb){
 
   switch(requestType){
     case "IntentRequest":
-      try intentDispatch(req,res,cb);
-      catch(err) throw err;
+      try {intentDispatch(req,res,cb);}
+      catch(err) {throw err;}
     break;
     case "PlaybackController.PauseCommandIssued":
       responder.streamStopRespond(req,res,cb);
