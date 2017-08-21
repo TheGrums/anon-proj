@@ -125,7 +125,7 @@ function filterData(data,req,cb1,cbarg,...args){
   if(!data.radios||!data.radios.length){
     throw "I couldn't find any station named "+req.body.request.intent.slots.Radio.value+".";
   }
-  else if(data.radios.length>1&&!req.body.request.dialogState){
+  else if(data.radios.length>1&&(!req.body.request.dialogState||req.body.request.dialogState=="STARTED")){
     var man = require('./objectsCollection');
     var msg = "I found several radio stations, could you be more specific ? Here is a sample of what I've found :";
     data.radios.forEach((a)=>{msg+=" "+a.Name+",";});
