@@ -106,7 +106,7 @@ function askShoutcast(searchterm, cb){
 
     //  If the requested name is not found and has white spaces, try without them.
     var pat = /\s/;
-    if(!JSON.parse(body).radios.length&&searchterm.hasWhiteSpaces()){
+    if(!JSON.parse(body).radios&&!JSON.parse(body).radios.length&&searchterm.hasWhiteSpaces()){
       var newst = searchterm.noWhiteSpaces();
       askShoutcast(newst, cb);
     }
@@ -183,7 +183,7 @@ function streamStopRespond(req,res,cb){
 /*  Returning void */
 function simpleSpeechRespond(text,req,res,cb){
   var man = require('./objectsCollection');
-  cb(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(text))));
+  cb(new man.responseObject(new man.Response(true,[],new man.OutputSpeech(text))));
 }
 
 //  Exporting functions
