@@ -106,7 +106,7 @@ function askShoutcast(searchterm, cb){
 
     //  If the requested name is not found and has white spaces, try without them.
     var pat = /\s/;
-    if(!JSON.parse(body).radios&&!JSON.parse(body).radios.length&&searchterm.hasWhiteSpaces()){
+    if(()!JSON.parse(body).radios||!JSON.parse(body).radios.length)&&searchterm.hasWhiteSpaces()){
       var newst = searchterm.noWhiteSpaces();
       askShoutcast(newst, cb);
     }
