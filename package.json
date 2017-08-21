@@ -12,6 +12,7 @@
   "dependencies": {
     "alexa-verifier": "^0.3.6",
     "body-parser": "^1.17.2",
-    "express": "^4.15.4"
+    "express": "^4.15.4",
+    "alexa-verifier-middleware": "git+https://github.com/alexa-js/alexa-verifier-middleware.git"
   }
 }

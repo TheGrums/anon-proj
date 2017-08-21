@@ -23,7 +23,7 @@ function requestDispatch(req, res, cb){
       throw "Please specify the radio station you want to listen to.";
     break;
     case "LaunchRequest":
-      throw "Ready to listen";
+      throw "Shoutcast is ready to listen.";
     break;
     default:
       throw "This functionality is not implemented yet.";
@@ -58,9 +58,10 @@ function intentDispatch(req,res,cb){
 //  Function to start listening
 function startServer(){
 
-  let express = require('express'), app = express(), bodyParser=require('body-parser');
+  var express = require('express'), app = express(), bodyParser=require('body-parser'), verifier = require('alexa-verifier-middleware');
 
   //  Defining middelware setting up headers
+  app.use(verifier);
   app.use(bodyParser.json());
   app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -74,7 +75,7 @@ function startServer(){
     try{
       requestDispatch(req,res, (jsonBody)=>{console.log("-- RESPONSE --");console.log(JSON.stringify(jsonBody, null, 2));res.json(jsonBody);} );//  Dispatching and responding
     }
-    catch(err){
+    catch(err){ //  catching dispatching errors
       var responder = require('./responseBuilder');
       responder.simpleSpeechRespond(err,req,res,(jsonBody)=>{res.json(jsonBody)});
     }

@@ -1,3 +1,16 @@
+//  Adding several properties to strings
+
+String.prototype.noWhiteSpaces = function(){
+  return this.replace(/\s/,"");
+};
+String.prototype.hasWhiteSpaces = function(){
+  return /\s/.test(this);
+};
+String.prototype.noSpecChars = function(){
+  var newst = this.replace(/[=%&\|\#\+\*\[\]\:]/g," ");
+  return newst.replace(/\([A-Za-z0-9]*\)/g,"");
+}
+
 //  Creating an Object to answer a stream request with more flexibility
 //  Currently covering play and stop functions
 var streamResponse = function(req,res,data){
@@ -16,23 +29,13 @@ var streamResponse = function(req,res,data){
     var stream = {}, response = {}, outspeech = {}, directive = {}, audioItem = {};
 
     //  Generating adapted speech
-    var speech = "Playing music from shoutcast.com";
-
-    //  Checking radio validity, if we have results but they do not have any uid
-    // if(finalspeech==speech&&(this.data.radios[0].UID==""||!Boolean(this.data.radios[0])))finalspeech = "This radio station cannot be played.";
-
-
     var speech = "Playing "+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+" on "+this.data.radios[0].Name;
 
     //  Building the response object step by step
     outspeech = new man.OutputSpeech(speech);
-
     stream = new man.Stream(this.data.radios[0].UID, "", 0);
-
     audioItem = new man.AudioItem(stream);
-
     directive = new man.PlayDirective("REPLACE_ALL",audioItem,"AudioPlayer.Play");
-
     response = new man.Response(true,[directive],outspeech);
 
     return new man.responseObject(response);
@@ -77,31 +80,21 @@ function getStreamUrl(resobj,cb,cbarg){
 }
 
 /*  Returning void */
-function askShoutcast(req, cb){
+function askShoutcast(searchterm, cb){
 
   var srequest = require('request');
-  var requestdata = req.body;
-  var searchterm = requestdata.request.intent.slots.Radio.value;
 
   // Simulating <none found> in askShoutcast
   if(searchterm == 'undefined' || searchterm ==""){
     cb(JSON.parse({radios:[]}));
     return;
   }
-  console.log("-- SHOUTCAST REQUEST --");
-  console.log(JSON.stringify({
-    "action":"advancedsearch",
-    "station":searchterm,
-    "limit":3,
-    "format":"json",
-    "extended":"yes",
-    "caller":"alexa"
-  }, null, 2));
+
   srequest.post({
     url:'http://optout.shoutcast.com/radioinfo.cfm',
     form:{
-      "action":"search",
-      "string":searchterm,
+      "action":"advancedsearch",
+      "station":searchterm,
       "limit":3,
       "format":"json",
       "extended":"yes",
@@ -110,7 +103,14 @@ function askShoutcast(req, cb){
   },
   function(err,res,body){
     console.log("-- SHOUTCAST RESPONSE --");console.log(JSON.stringify(JSON.parse(body), null, 2));
-    cb(JSON.parse(body));
+
+    //  If the requested name is not found and has white spaces, try without them.
+    var pat = /\s/;
+    if(!JSON.parse(body).radios.length&&searchterm.hasWhiteSpaces()){
+      var newst = searchterm.noWhiteSpaces();
+      askShoutcast(newst, cb);
+    }
+    else cb(JSON.parse(body));
   });
 
 }
@@ -123,11 +123,11 @@ function askShoutcast(req, cb){
 function filterData(data,req,cb1,cbarg,...args){
 
   if(!data.radios||!data.radios.length){
-    throw "I couldn't find such radio.";
+    throw "I couldn't find any station named "+req.body.request.intent.slots.Radio.value+".";
   }
-  else if(data.radios.length>1){
+  else if(data.radios.length>1&&!req.body.request.intent.dialogState){
     var man = require('./objectsCollection');
-    var msg = "I found several radios, could you be more specific ? Here is a sample of what I've found :";
+    var msg = "I found several radio stations, could you be more specific ? Here is a sample of what I've found :";
     data.radios.forEach((a)=>{msg+=" "+a.Name+",";});
     cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",new man.Intent(req.body.request.intent.name,{"Radio":new man.Slot("Radio")}),"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
   }
@@ -142,7 +142,7 @@ function filterData(data,req,cb1,cbarg,...args){
 
 /*  Returning void */
 function trackRespond(req,res,cb){
-  askShoutcast(req, (data)=>{
+  askShoutcast(req.body.request.intent.slots.Radio.value, (data)=>{
 
     var man = require('./objectsCollection');
     try {filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);}
@@ -157,7 +157,7 @@ function trackRespond(req,res,cb){
 //  Asking alexa to start playing a stream
 /*  Returning void */
 function streamPlayRespond(req,res,cb){
-  askShoutcast(req, (data)=>{
+  askShoutcast(req.body.request.intent.slots.Radio.value, (data)=>{
     var sres = new streamResponse(req,res,data);
 
     try {filterData(data,req,(cbfunc,stresponse)=>{
@@ -183,7 +183,7 @@ function streamStopRespond(req,res,cb){
 /*  Returning void */
 function simpleSpeechRespond(text,req,res,cb){
   var man = require('./objectsCollection');
-  cb(new man.responseObject(new man.Response(true,[],new man.OutputSpeech(text))));
+  cb(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(text))));
 }
 
 //  Exporting functions
