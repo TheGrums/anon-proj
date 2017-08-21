@@ -11,8 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "alexa-verifier": "^0.3.6",
+    "alexa-verifier-middleware": "git+https://github.com/alexa-js/alexa-verifier-middleware.git",
     "body-parser": "^1.17.2",
-    "express": "^4.15.4",
-    "alexa-verifier-middleware": "git+https://github.com/alexa-js/alexa-verifier-middleware.git"
+    "express": "^4.15.4"
   }
 }
