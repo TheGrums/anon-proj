@@ -139,7 +139,7 @@ function filterData(data,req,cb1,cbarg,...args){
   else if(data.radios.length>1&&(typeof req.body.request.dialogState === "undefined"||req.body.request.dialogState=="STARTED")){
     var man = require('./objectsCollection');
     var msg = "I found several radio stations, could you be more specific ? Here is a sample of what I've found :";
-    data.radios.slice(0,3).forEach((a)=>{msg+=" "+a.Name+",";});
+    safeStationList(data).radios.slice(0,3).forEach((a)=>{msg+=" "+a.Name+",";});
     cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",new man.Intent(req.body.request.intent.name,{"Radio":new man.Slot("Radio")}),"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
   }
   else if(typeof data.radios[0].UID==="undefined"||data.radios.UID==""){
