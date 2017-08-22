@@ -20,7 +20,7 @@ var streamResponse = function(req,res,data){
   this.data = data;
   this.man = require('./objectsCollection');
 
-  this.play = function(){
+  this.play = function(genre){
     //  Lazyness
     var man = this.man;
 
@@ -32,7 +32,7 @@ var streamResponse = function(req,res,data){
 
     //  Building the response object step by step
     outspeech = new man.OutputSpeech(speech);
-    stream = new man.Stream(this.data.radios[0].UID, "", 0);
+    stream = new man.Stream((genre==="undefined"?this.data.radios[0].UID:genre+"*"+this.data.radios[0].UID), "", 0);
     audioItem = new man.AudioItem(stream);
     directive = new man.PlayDirective("REPLACE_ALL",audioItem,"AudioPlayer.Play");
     response = new man.Response(true,[directive],outspeech);
@@ -52,14 +52,14 @@ var streamResponse = function(req,res,data){
     var newrads = this.data.radios.map((a,b,c)=>{if(a.UID==this.req.body.context.AudioPlayer.token.split("*")[1])return c[(b+1)%c.length]; }, this);
     var finalarray = newrads.filter((a)=>{return typeof a!=="undefined";});
     this.data.radios = finalarray;
-    return this.play();
+    return this.play(this.req.body.context.AudioPlayer.token.split("*")[0]);
   }
 
   this.previous = function(){
     var newrads = this.data.radios.map((a,b,c)=>{if(a.UID==this.req.body.context.AudioPlayer.token.split("*")[1])return c[(b-1<0?c.length-1:b-1)]; },this);
     var finalarray = newrads.filter((a)=>{return typeof a!=="undefined";});
     this.data.radios = finalarray;
-    return this.play();
+    return this.play(this.req.body.context.AudioPlayer.token.split("*")[0]);
   }
 
 }
@@ -78,8 +78,8 @@ function getStreamUrl(resobj,cb,cbarg){
     url:'http://optout.shoutcast.com/radioinfo.cfm',
     form:{
       "action":"uid",
-      "uid":resobj.response.directives[0].audioItem.stream.token,
-      "limit":3,
+      "uid":(/[*]/.test(resobj.response.directives[0].audioItem.stream.token)?resobj.response.directives[0].audioItem.stream.token.split("*")[1]:resobj.response.directives[0].audioItem.stream.token),
+      "limit":1,
       "format":"json",
       "extended":"yes",
       "caller":"alexa"
@@ -157,7 +157,6 @@ function filterData(data,req,cb1,cbarg,...args){
 function safeStationList(data){
 
   var newdat = data;
-
   if(typeof newdat.radios==="undefined"||!newdat.radios.length){
     throw "I couldn't find any radio station.";
   }
@@ -165,6 +164,9 @@ function safeStationList(data){
   newdat.radios = radios.filter(function(a){
     return !(typeof a.UID === "undefined" || a.UID == "");
   });
+  if(!newdat.radios.length){
+    throw "The stations I've found can't be played currently";
+  }
   return newdat;
 
 }
@@ -187,7 +189,6 @@ function trackRespond(req,res,cb){
 
 //  Asking alexa to play a specific music type
 function streamGenreRespond(action,req,res,cb){
-
   var searchterm;
 
   if(action==1||action==-1){
@@ -199,16 +200,18 @@ function streamGenreRespond(action,req,res,cb){
     searchterm = req.body.request.intent.slots.Genre.value;
   }
   askShoutcast("genre", searchterm, (data,req,res,addarg)=>{
-
+  try{
       var sres = new streamResponse(req,res,safeStationList(data));
       var endres;
       if(addarg[0]==1)endres = sres.next();
       else if(addarg[0]==-1)endres = sres.previous();
-      else endres = sres.play();
+      else endres = sres.play(addarg[1]);
       getStreamUrl(endres,(resobj,cbfunc)=>{cbfunc(resobj);},cb);
+  }catch(err){
+    simpleSpeechRespond(err,req,res,cb);
+  }
 
-
-  },req,res,action);
+  },req,res,action,searchterm);
 
 }
 
