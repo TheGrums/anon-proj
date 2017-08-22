@@ -1,7 +1,7 @@
 //  Adding several properties to strings
 
 String.prototype.noWhiteSpaces = function(){
-  return this.replace(/\s/,"");
+  return this.replace(/\s/g,"");
 };
 String.prototype.hasWhiteSpaces = function(){
   return /\s/.test(this);
@@ -117,8 +117,7 @@ function askShoutcast(searchkey, searchterm, cb, req, res, ...addarg){
     console.log("-- SHOUTCAST RESPONSE --");console.log(JSON.stringify(JSON.parse(body), null, 2));
 
     //  If the requested name is not found and has white spaces, try without them.
-    var pat = /\s/;
-    if((typeof JSON.parse(body).radios !== "undefined"||!JSON.parse(body).radios.length)&&searchterm.hasWhiteSpaces()){
+    if((typeof JSON.parse(body).radios === "undefined"||!JSON.parse(body).radios.length)&&searchterm.hasWhiteSpaces()){
       var newst = searchterm.noWhiteSpaces();
       askShoutcast(searchkey, newst, cb, req, res, addarg);
     }
@@ -134,7 +133,7 @@ function askShoutcast(searchkey, searchterm, cb, req, res, ...addarg){
 
 function filterData(data,req,cb1,cbarg,...args){
 
-  if(typeof data.radios !== "undefined"||!data.radios.length){
+  if(typeof data.radios === "undefined"||!data.radios.length){
     throw "I couldn't find any station named "+req.body.request.intent.slots.Radio.value+".";
   }
   else if(data.radios.length>1&&(typeof req.body.request.dialogState === "undefined"||req.body.request.dialogState=="STARTED")){
