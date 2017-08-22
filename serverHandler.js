@@ -3,7 +3,10 @@
   the skill logic is not contained here, have a look at responseBuilder.js instead
 */
 
-// AudioPlayer.PlaybackStarted
+// TODO
+
+// AMAZON.HelpIntent
+// AMAZON.ResumeIntent
 
 //  This function is a router-like function
 //  to handle different types of requests
@@ -12,7 +15,7 @@ function requestDispatch(req, res, cb){
   var responder = require('./responseBuilder');
 
   //  Aborting for requests that doesn't require responses
-  var no_ans = ["AudioPlayer.PlaybackFinished","AudioPlayer.PlaybackNearlyFinished","AudioPlayer.PlaybackStarted","AudioPlayer.PlaybackStopped"];
+  var no_ans = ["System.ExceptionEncountered","AudioPlayer.PlaybackFinished","AudioPlayer.PlaybackNearlyFinished","AudioPlayer.PlaybackFailed","AudioPlayer.PlaybackStarted","AudioPlayer.PlaybackStopped"];
   if(no_ans.indexOf(requestType)!=-1){cb({});return;}
 
 
@@ -24,6 +27,12 @@ function requestDispatch(req, res, cb){
     case "PlaybackController.PauseCommandIssued":
       responder.streamStopRespond(req,res,cb);
     break;
+    case "PlaybackController.nextCommandIssued":
+      responder.streamGenreRespond(1,req,res,cb);
+    break;
+    case "PlaybackController.previousCommandIssued":
+      responder.streamGenreRespond(-1,req,res,cb);
+    break;
     case "PlaybackController.PlayCommandIssued":
       throw "Please specify the radio station you want to listen to.";
     break;
@@ -31,7 +40,7 @@ function requestDispatch(req, res, cb){
       throw "Shoutcast is ready to listen.";
     break;
     default:
-      throw "This functionality is not implemented yet.";
+      throw "I'm unable to follow your orders. Please forgive me, beloved master.";
     break;
   }
 }
@@ -43,7 +52,11 @@ function intentDispatch(req,res,cb){
   var intentName = req.body.request.intent.name;
   var responder = require('./responseBuilder');
 
+  var exceptions = ["AMAZON.LoopOffIntent","AMAZON.LoopOnIntent","AMAZON.RepeatIntent","AMAZON.ShuffleOffIntent","AMAZON.ShuffleOnIntent","AMAZON.StartOverIntent"];
+  if(exceptions.indexOf(intentDispatch)!=-1){throw "I can't execute your orders, human lord.";return;}
+
   switch(intentName){
+
     case "getRadioTrack":
       responder.trackRespond(req,res,cb);
     break;
@@ -53,17 +66,20 @@ function intentDispatch(req,res,cb){
     case "AMAZON.PauseIntent":
       responder.streamStopRespond(req,res,cb);
     break;
-    case "PreviousIntent":
+    case "AMAZON.CancelIntent":
+      responder.streamStopRespond(req,res,cb);
+    break;
+    case "AMAZON.PreviousIntent":
       responder.streamGenreRespond(-1,req,res,cb);
     break;
-    case "NextIntent":
+    case "AMAZON.NextIntent":
       responder.streamGenreRespond(1,req,res,cb);
     break;
     case "getRadioGenre":
       responder.streamGenreRespond(0,req,res,cb);
     break;
     default:
-      throw "This functionality is not implemented yet.";
+      throw "My intellectual abilities are too limited to do that.";
     break;
   }
 
