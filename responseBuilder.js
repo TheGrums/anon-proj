@@ -32,7 +32,7 @@ var streamResponse = function(req,res,data){
 
     //  Building the response object step by step
     outspeech = new man.OutputSpeech(speech);
-    stream = new man.Stream((genre==="undefined"?this.data.radios[0].UID:genre+"*"+this.data.radios[0].UID), "", 0);
+    stream = new man.Stream((typeof genre==="undefined"?this.data.radios[0].UID:genre+"*"+this.data.radios[0].UID), "", 0);
     audioItem = new man.AudioItem(stream);
     directive = new man.PlayDirective("REPLACE_ALL",audioItem,"AudioPlayer.Play");
     response = new man.Response(true,[directive],outspeech);
