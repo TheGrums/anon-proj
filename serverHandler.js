@@ -11,6 +11,11 @@ function requestDispatch(req, res, cb){
   var requestType = req.body.request.type;
   var responder = require('./responseBuilder');
 
+  //  Aborting for requests that doesn't require responses
+  var no_ans = ["AudioPlayer.PlaybackFinished","AudioPlayer.PlaybackNearlyFinished","AudioPlayer.PlaybackStarted","AudioPlayer.PlaybackStopped"];
+  if(no_ans.indexOf(requestType)!=-1){cb({});return;}
+
+
   switch(requestType){
     case "IntentRequest":
       try {intentDispatch(req,res,cb);}
@@ -44,9 +49,18 @@ function intentDispatch(req,res,cb){
     break;
     case "getRadioStream":
       responder.streamPlayRespond(req,res,cb);
-   break;
+    break;
     case "AMAZON.PauseIntent":
       responder.streamStopRespond(req,res,cb);
+    break;
+    case "PreviousIntent":
+      responder.streamGenreRespond(-1,req,res,cb);
+    break;
+    case "NextIntent":
+      responder.streamGenreRespond(1,req,res,cb);
+    break;
+    case "getRadioGenre":
+      responder.streamGenreRespond(0,req,res,cb);
     break;
     default:
       throw "This functionality is not implemented yet.";
@@ -61,7 +75,7 @@ function startServer(){
   var express = require('express'), app = express(), bodyParser=require('body-parser'), verifier = require('alexa-verifier-middleware');
 
   //  Defining middelware setting up headers
-  app.use(verifier);
+  //  app.use(verifier);
   app.use(bodyParser.json());
   app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -73,7 +87,7 @@ function startServer(){
   app.post('/', function(req, res) {
     console.log("-- REQUEST --");console.log(JSON.stringify(req.body, null, 2));
     try{
-      requestDispatch(req,res, (jsonBody)=>{console.log("-- RESPONSE --");console.log(JSON.stringify(jsonBody, null, 2));res.json(jsonBody);} );//  Dispatching and responding
+      requestDispatch(req, res, (jsonBody)=>{console.log("-- RESPONSE --");console.log(JSON.stringify(jsonBody, null, 2));res.json(jsonBody);} );//  Dispatching and responding
     }
     catch(err){ //  catching dispatching errors
       var responder = require('./responseBuilder');

@@ -20,8 +20,7 @@ var streamResponse = function(req,res,data){
   this.data = data;
   this.man = require('./objectsCollection');
 
-  this.play = function(cb){
-
+  this.play = function(){
     //  Lazyness
     var man = this.man;
 
@@ -49,11 +48,25 @@ var streamResponse = function(req,res,data){
     //  Tadaaaam !
   };
 
+  this.next = function(){
+    var newrads = this.data.radios.map((a,b,c)=>{if(a.UID==this.req.body.context.AudioPlayer.token.split("*")[1])return c[(b+1)%c.length]; }, this);
+    var finalarray = newrads.filter((a)=>{return typeof a!=="undefined";});
+    this.data.radios = finalarray;
+    return this.play();
+  }
+
+  this.previous = function(){
+    var newrads = this.data.radios.map((a,b,c)=>{if(a.UID==this.req.body.context.AudioPlayer.token.split("*")[1])return c[(b-1<0?c.length-1:b-1)]; },this);
+    var finalarray = newrads.filter((a)=>{return typeof a!=="undefined";});
+    this.data.radios = finalarray;
+    return this.play();
+  }
+
 }
 
+//  Grabbing a streamurl
 function getStreamUrl(resobj,cb,cbarg){
 
-  console.log(JSON.stringify(resobj,null,2));
   if(!resobj.response.directives.length){ //  Avoid processing exception responses
     cb(resobj,cbarg);
     return;
@@ -80,37 +93,36 @@ function getStreamUrl(resobj,cb,cbarg){
 }
 
 /*  Returning void */
-function askShoutcast(searchterm, cb){
-
+function askShoutcast(searchkey, searchterm, cb, req, res, ...addarg){
   var srequest = require('request');
 
   // Simulating <none found> in askShoutcast
-  if(searchterm == 'undefined' || searchterm ==""){
+  if(typeof searchterm === "undefined" || searchterm ==""){
     cb(JSON.parse({radios:[]}));
     return;
   }
-
+  var form = {
+    "action":"advancedsearch",
+    "limit":15,
+    "format":"json",
+    "extended":"yes",
+    "caller":"alexa"
+  };
+  form[searchkey] = searchterm;
   srequest.post({
     url:'http://optout.shoutcast.com/radioinfo.cfm',
-    form:{
-      "action":"advancedsearch",
-      "station":searchterm,
-      "limit":3,
-      "format":"json",
-      "extended":"yes",
-      "caller":"alexa"
-    }
+    form:form
   },
   function(err,res,body){
     console.log("-- SHOUTCAST RESPONSE --");console.log(JSON.stringify(JSON.parse(body), null, 2));
 
     //  If the requested name is not found and has white spaces, try without them.
     var pat = /\s/;
-    if((!JSON.parse(body).radios||!JSON.parse(body).radios.length)&&searchterm.hasWhiteSpaces()){
+    if((typeof JSON.parse(body).radios !== "undefined"||!JSON.parse(body).radios.length)&&searchterm.hasWhiteSpaces()){
       var newst = searchterm.noWhiteSpaces();
-      askShoutcast(newst, cb);
+      askShoutcast(searchkey, newst, cb, req, res, addarg);
     }
-    else cb(JSON.parse(body));
+    else cb(JSON.parse(body),req,res, addarg);
   });
 
 }
@@ -122,18 +134,38 @@ function askShoutcast(searchterm, cb){
 
 function filterData(data,req,cb1,cbarg,...args){
 
-  if(!data.radios||!data.radios.length){
+  if(typeof data.radios !== "undefined"||!data.radios.length){
     throw "I couldn't find any station named "+req.body.request.intent.slots.Radio.value+".";
   }
-  else if(data.radios.length>1&&(!req.body.request.dialogState||req.body.request.dialogState=="STARTED")){
+  else if(data.radios.length>1&&(typeof req.body.request.dialogState === "undefined"||req.body.request.dialogState=="STARTED")){
     var man = require('./objectsCollection');
     var msg = "I found several radio stations, could you be more specific ? Here is a sample of what I've found :";
-    data.radios.forEach((a)=>{msg+=" "+a.Name+",";});
+    data.radios.slice(0,3).forEach((a)=>{msg+=" "+a.Name+",";});
     cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",new man.Intent(req.body.request.intent.name,{"Radio":new man.Slot("Radio")}),"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
+  }
+  else if(typeof data.radios[0].UID==="undefined"||data.radios.UID==""){
+    throw "Sorry, this radio station can't be played due to technical reasons.";
   }
   else{
     cb1(cbarg,args);
   }
+
+}
+
+// This function is deleting non-playable content from shoutcast's answer
+
+function safeStationList(data){
+
+  var newdat = data;
+
+  if(typeof newdat.radios==="undefined"||!newdat.radios.length){
+    throw "I couldn't find any radio station.";
+  }
+  var radios = newdat.radios;
+  newdat.radios = radios.filter(function(a){
+    return !(typeof a.UID === "undefined" || a.UID == "");
+  });
+  return newdat;
 
 }
 
@@ -142,13 +174,41 @@ function filterData(data,req,cb1,cbarg,...args){
 
 /*  Returning void */
 function trackRespond(req,res,cb){
-  askShoutcast(req.body.request.intent.slots.Radio.value, (data)=>{
+  askShoutcast("station", req.body.request.intent.slots.Radio.value, (data,req,res)=>{
 
     var man = require('./objectsCollection');
     try {filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);}
     catch(err) {simpleSpeechRespond(err,req,res,cb);}
 
-  });
+  },req,res);
+
+}
+
+
+//  Asking alexa to play a specific music type
+function streamGenreRespond(action,req,res,cb){
+
+  var searchterm;
+
+  if(action==1||action==-1){
+    if(typeof req.body.context.AudioPlayer.token === "undefined"||!(/[*]/.test(req.body.context.AudioPlayer.token))){simpleSpeechRespond("This can't be done.",req,res,cb);return;}
+    searchterm = req.body.context.AudioPlayer.token.split("*")[0];
+  }
+  else if(action==0){
+    if(typeof req.body.request.intent.slots.Genre.value === "undefined"||req.body.request.intent.slots.Genre.value==""){simpleSpeechRespond("An error occured.",req,res,cb);return;}
+    searchterm = req.body.request.intent.slots.Genre.value;
+  }
+  askShoutcast("genre", searchterm, (data,req,res,addarg)=>{
+
+      var sres = new streamResponse(req,res,safeStationList(data));
+      var endres;
+      if(addarg[0]==1)endres = sres.next();
+      else if(addarg[0]==-1)endres = sres.previous();
+      else endres = sres.play();
+      getStreamUrl(endres,(resobj,cbfunc)=>{cbfunc(resobj);},cb);
+
+
+  },req,res,action);
 
 }
 
@@ -157,7 +217,7 @@ function trackRespond(req,res,cb){
 //  Asking alexa to start playing a stream
 /*  Returning void */
 function streamPlayRespond(req,res,cb){
-  askShoutcast(req.body.request.intent.slots.Radio.value, (data)=>{
+  askShoutcast("station", req.body.request.intent.slots.Radio.value, (data,req,res)=>{
     var sres = new streamResponse(req,res,data);
 
     try {filterData(data,req,(cbfunc,stresponse)=>{
@@ -168,7 +228,7 @@ function streamPlayRespond(req,res,cb){
 
     catch(err) {simpleSpeechRespond(err,req,res,cb);}
 
-  });
+  },req,res);
 }
 
 //  Asking alexa to stop playing a stream
@@ -188,6 +248,7 @@ function simpleSpeechRespond(text,req,res,cb){
 
 //  Exporting functions
 module.exports = {
+  streamGenreRespond : streamGenreRespond,
   trackRespond : trackRespond,
   streamPlayRespond : streamPlayRespond,
   streamStopRespond : streamStopRespond,
