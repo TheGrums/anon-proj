@@ -81,7 +81,6 @@ var streamResponse = function(req,res,data){
 //  Grabbing a streamurl
 function getStreamUrl(resobj,cb,cbarg){
 
-  console.log("--- RESPONSE ---");console.log(JSON.stringify(resobj,null,2));
 
   if(!resobj.response.directives.length){ //  Avoid processing exception responses
     cb(resobj,cbarg);
@@ -130,7 +129,6 @@ function askShoutcast(searchkey, searchterm, cb, req, res, ...addarg){
     form:form
   },
   function(err,res,body){
-    console.log("-- SHOUTCAST RESPONSE --");console.log(JSON.stringify(JSON.parse(body), null, 2));
 
     //  If the requested name is not found and has white spaces, try without them.
     if((typeof JSON.parse(body).radios === "undefined"||!JSON.parse(body).radios.length)&&searchterm.hasWhiteSpaces()){
@@ -173,7 +171,7 @@ function safeStationList(data){
 
   var newdat = data;
   if(typeof newdat.radios==="undefined"||!newdat.radios.length){
-    throw "I couldn't find any radio station.".err();
+    throw "I couldn't find any radio station up running. I might have misunderstood, could you repeat ?".err();
   }
   var radios = newdat.radios;
   newdat.radios = radios.filter(function(a){
@@ -194,7 +192,7 @@ function trackRespond(req,res,cb){
   askShoutcast("station", req.body.request.intent.slots.Radio.value, (data,req,res)=>{
 
     var man = require('./objectsCollection');
-    try {filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);}
+    try {filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(true,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);}
     catch(err) {console.log("ERROR : "+err.message);simpleSpeechRespond(err.message,req,res,cb);}
 
   },req,res);

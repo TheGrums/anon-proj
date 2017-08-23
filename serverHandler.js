@@ -97,7 +97,7 @@ function startServer(){
   var express = require('express'), app = express(), bodyParser=require('body-parser'), verifier = require('alexa-verifier-middleware');
 
   //  Defining middelware setting up headers
-  //  app.use(verifier);
+  app.use(verifier);
   app.use(bodyParser.json());
   app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -107,9 +107,8 @@ function startServer(){
 
   //  Handling post requests from amazon
   app.post('/', function(req, res) {
-    console.log("-- REQUEST --");console.log(JSON.stringify(req.body, null, 2));
     try{
-      requestDispatch(req, res, (jsonBody)=>{console.log("-- RESPONSE --");console.log(JSON.stringify(jsonBody, null, 2));res.json(jsonBody);} );//  Dispatching and responding
+      requestDispatch(req, res, (jsonBody)=>{res.json(jsonBody);} );//  Dispatching and responding
     }
     catch(err){ //  catching dispatching errors
       var responder = require('./responseBuilder');
