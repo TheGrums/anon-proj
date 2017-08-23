@@ -23,7 +23,7 @@ function requestDispatch(req, res, cb){
       responder.streamStopRespond(req,res,cb);
     break;
     case "PlaybackController.PlayCommandIssued":
-      responder.streamPlayRespond(req,res,cb);
+      responder.streamResumeRespond(req,res,cb);
     break;
     case "PlaybackController.NextCommandIssued":
       responder.streamGenreRespond(1,req,res,cb);
