@@ -25,10 +25,10 @@ function requestDispatch(req, res, cb){
     case "PlaybackController.PlayCommandIssued":
       responder.streamPlayRespond(req,res,cb);
     break;
-    case "PlaybackController.nextCommandIssued":
+    case "PlaybackController.NextCommandIssued":
       responder.streamGenreRespond(1,req,res,cb);
     break;
-    case "PlaybackController.previousCommandIssued":
+    case "PlaybackController.PreviousCommandIssued":
       responder.streamGenreRespond(-1,req,res,cb);
     break;
     case "LaunchRequest":
