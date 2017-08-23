@@ -52,6 +52,12 @@ var responseObject = function(response){ // Response object
   this.response = response;
 }
 
+responseObject.prototype.mute = function(){
+  let newthis = this;
+  remove(newthis.response.outputSpeech);
+  return newthis;
+}
+
 module.exports = {
   Stream : Stream,
   AudioItem : AudioItem,

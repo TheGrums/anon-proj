@@ -10,8 +10,8 @@ function requestDispatch(req, res, cb){
   var responder = require('./responseBuilder');
 
   //  Aborting for requests that doesn't require responses
-  var no_ans = ["System.ExceptionEncountered","AudioPlayer.PlaybackFinished","AudioPlayer.PlaybackNearlyFinished","AudioPlayer.PlaybackFailed","AudioPlayer.PlaybackStarted","AudioPlayer.PlaybackStopped"];
-  if(no_ans.indexOf(requestType)!=-1){throw "I'm unable to follow your orders. Please forgive me, beloved master.";return;}
+  var no_ans = ["System.ExceptionEncountered","AudioPlayer.PlaybackFinished","AudioPlayer.PlaybackNearlyFinished","AudioPlayer.PlaybackStarted","AudioPlayer.PlaybackStopped"];
+  if(no_ans.indexOf(requestType)!=-1){cb({});return;}
 
 
   switch(requestType){
@@ -22,17 +22,20 @@ function requestDispatch(req, res, cb){
     case "PlaybackController.PauseCommandIssued":
       responder.streamStopRespond(req,res,cb);
     break;
+    case "PlaybackController.PlayCommandIssued":
+      responder.streamStopRespond(req,res,cb);
+    break;
     case "PlaybackController.nextCommandIssued":
       responder.streamGenreRespond(1,req,res,cb);
     break;
     case "PlaybackController.previousCommandIssued":
       responder.streamGenreRespond(-1,req,res,cb);
     break;
-    case "PlaybackController.PlayCommandIssued":
-      throw "Please specify the radio station you want to listen to.";
-    break;
     case "LaunchRequest":
       throw "Shoutcast is ready to listen.";
+    break;
+    case "AudioPlayer.PlaybackFailed":
+      responder.streamStopRespond(req,res,cb);
     break;
     default:
       throw "I'm unable to follow your orders. Please forgive me, beloved master.";
@@ -70,7 +73,7 @@ function intentDispatch(req,res,cb){
       responder.streamGenreRespond(1,req,res,cb);
     break;
     case "AMAZON.HelpIntent":
-      responder.simpleSpeechRespond("The shoutcast skill allows you to listen to any radio station registered on shoutcast.com. Try 'Alexa, ask shoutcast to play pandashowradio' or 'Alexa, ask shoutcast what's on pandashowradio'. If you don't know any station name try 'Alexa, ask shoutcast to play blues songs'.'",req,res,cb);
+      responder.simpleSpeechRespond("The shoutcast skill allows you to listen to any radio station registered on shoutcast.com. Try 'Alexa, ask shoutcast to start pandashowradio' or 'Alexa, ask shoutcast what's on pandashowradio'. If you don't know any station name try 'Alexa, ask shoutcast to play blues songs'.'",req,res,cb);
     break;
     case "AMAZON.ResumeIntent":
       responder.streamResumeRespond(req,res,cb);

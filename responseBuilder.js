@@ -64,7 +64,7 @@ var streamResponse = function(req,res,data){
     var newrads = this.data.radios.map((a,b,c)=>{if(a.UID==this.req.body.context.AudioPlayer.token.extractUid())return c[(b+1)%c.length]; }, this);
     var finalarray = newrads.filter((a)=>{return typeof a!=="undefined";});
     this.data.radios = finalarray;
-    return this.play(this.req.body.context.AudioPlayer.token.extractUid());
+    return this.play(this.req.body.context.AudioPlayer.token.extractToken());
   }
 
   this.previous = function(){
@@ -78,6 +78,9 @@ var streamResponse = function(req,res,data){
 
 //  Grabbing a streamurl
 function getStreamUrl(resobj,cb,cbarg){
+
+  console.log("--- RESPONSE ---");console.log(JSON.stringify(resobj,null,2));
+
   if(!resobj.response.directives.length){ //  Avoid processing exception responses
     cb(resobj,cbarg);
     return;
@@ -149,7 +152,7 @@ function filterData(data,req,cb1,cbarg,...args){
   }
   else if(data.radios.length>1&&(typeof req.body.request.dialogState === "undefined"||req.body.request.dialogState=="STARTED")){
     var man = require('./objectsCollection');
-    var msg = "I found several radio stations, could you be more specific ? Here is a sample of what I've found :";
+    var msg = "This led me to several radio stations, could you be more specific ? Here is a sample of what I've found :";
     safeStationList(data).radios.slice(0,3).forEach((a)=>{msg+=" "+a.Name+",";}); //  Two securities are better than one
     cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",new man.Intent(req.body.request.intent.name,{"Radio":new man.Slot("Radio")}),"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
   }
