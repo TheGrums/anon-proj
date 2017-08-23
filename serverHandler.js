@@ -73,7 +73,7 @@ function intentDispatch(req,res,cb){
       responder.simpleSpeechRespond("The shoutcast skill allows you to listen to any radio station registered on shoutcast.com. Try 'Alexa, ask shoutcast to play pandashowradio' or 'Alexa, ask shoutcast what's on pandashowradio'. If you don't know any station name try 'Alexa, ask shoutcast to play blues songs'.'",req,res,cb);
     break;
     case "AMAZON.ResumeIntent":
-
+      responder.streamResumeRespond(req,res,cb);
     break;
     case "AMAZON.CancelIntent":
       responder.streamStopRespond(req,res, cb);

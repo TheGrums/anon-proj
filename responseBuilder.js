@@ -11,12 +11,17 @@ String.prototype.noSpecChars = function(){
   return newst.replace(/\([A-Za-z0-9]*\)/g,"");
 }
 String.prototype.extractUid = function(){
-  if(test(/[*]/.test(this))return this.split(/[*]/)[1];
+  if(/[*]/.test(this))return this.split(/[*]/)[1];
   else return this;
 }
 String.prototype.extractGenre = function(){
-  if(test(/[*]/.test(this))return this.split(/[*]/)[0];
-  else throw "No genre found !";
+  if(/[*]/.test(this))return this.split(/[*]/)[0];
+  else throw "No genre found !".err();
+}
+
+//  Little magic twist to write less
+String.prototype.err = function(){
+  return new Error(this);
 }
 
 //  Creating an Object to answer a stream request with more flexibility
@@ -34,7 +39,6 @@ var streamResponse = function(req,res,data){
 
     //  Those variables are to be sub-components of the responseObject
     var stream = {}, response = {}, outspeech = {}, directive = {}, audioItem = {};
-
     //  Generating adapted speech
     var speech = (typeof data.radios[0].Title !== "undefined"?"Playing "+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+" on "+this.data.radios[0].Name:"");
 
@@ -74,7 +78,6 @@ var streamResponse = function(req,res,data){
 
 //  Grabbing a streamurl
 function getStreamUrl(resobj,cb,cbarg){
-
   if(!resobj.response.directives.length){ //  Avoid processing exception responses
     cb(resobj,cbarg);
     return;
@@ -142,7 +145,7 @@ function askShoutcast(searchkey, searchterm, cb, req, res, ...addarg){
 function filterData(data,req,cb1,cbarg,...args){
 
   if(typeof data.radios === "undefined"||!data.radios.length){
-    throw "I couldn't find any station named "+req.body.request.intent.slots.Radio.value+".";
+    throw "I couldn't find any station named "+req.body.request.intent.slots.Radio.value+".".err();
   }
   else if(data.radios.length>1&&(typeof req.body.request.dialogState === "undefined"||req.body.request.dialogState=="STARTED")){
     var man = require('./objectsCollection');
@@ -151,7 +154,7 @@ function filterData(data,req,cb1,cbarg,...args){
     cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",new man.Intent(req.body.request.intent.name,{"Radio":new man.Slot("Radio")}),"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
   }
   else if(typeof data.radios[0].UID==="undefined"||data.radios.UID==""){
-    throw "Sorry, this radio station can't be played due to technical reasons.";
+    throw "Sorry, this radio station can't be played due to technical reasons.".err();
   }
   else{
     cb1(cbarg,args);
@@ -165,14 +168,14 @@ function safeStationList(data){
 
   var newdat = data;
   if(typeof newdat.radios==="undefined"||!newdat.radios.length){
-    throw "I couldn't find any radio station.";
+    throw "I couldn't find any radio station.".err();
   }
   var radios = newdat.radios;
   newdat.radios = radios.filter(function(a){
     return !(typeof a.UID === "undefined" || a.UID == "");
   });
   if(!newdat.radios.length){
-    throw "The stations I've found can't be played currently";
+    throw "The stations I've found can't be played currently".err();
   }
   return newdat;
 
@@ -187,7 +190,7 @@ function trackRespond(req,res,cb){
 
     var man = require('./objectsCollection');
     try {filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(false,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);}
-    catch(err) {simpleSpeechRespond(err,req,res,cb);}
+    catch(err) {console.log("ERROR : "+err.message);simpleSpeechRespond(err.message,req,res,cb);}
 
   },req,res);
 
@@ -201,7 +204,7 @@ function streamGenreRespond(action,req,res,cb){
   if(action==1||action==-1){
     if(typeof req.body.context.AudioPlayer.token === "undefined"){simpleSpeechRespond("This can't be done.",req,res,cb);return;}
     try{searchterm = req.body.context.AudioPlayer.token.extractGenre();}
-    catch(err){simpleSpeechRespond("This can't be done.",req,res,cb);return;}
+    catch(err){console.log("ERROR : "+err.message);simpleSpeechRespond("This can't be done.",req,res,cb);return;}
   }
   else if(action==0){
     if(typeof req.body.request.intent.slots.Genre.value === "undefined"||req.body.request.intent.slots.Genre.value==""){simpleSpeechRespond("An error occured.",req,res,cb);return;}
@@ -216,7 +219,8 @@ function streamGenreRespond(action,req,res,cb){
       else endres = sres.play(addarg[1]);
       getStreamUrl(endres,(resobj,cbfunc)=>{cbfunc(resobj);},cb);
   }catch(err){
-    simpleSpeechRespond(err,req,res,cb);
+    console.log("ERROR : "+err.message);
+    simpleSpeechRespond(err.message,req,res,cb);
   }
 
   },req,res,action,searchterm);
@@ -243,17 +247,24 @@ function streamPlayRespond(req,res,cb){
 
     } //  Callback executed after last external request (getting streamUrl)
 
-    catch(err) {simpleSpeechRespond(err,req,res,cb);}
+    catch(err) {console.log("ERROR : "+err.message);simpleSpeechRespond(err.message,req,res,cb);}
 
   },req,res);
 }
 
 function streamResumeRespond(req,res,cb){
+
   if(typeof req.body.context.AudioPlayer.token === "undefined"){simpleSpeechRespond("This can't be done.",req,res,cb);return;}
 
-  var sres = new StreamResponse(req,res,{"radios":[{"UID":req.body.context.AudioPlayer.token.extractUid()}]});  //  Sending fake data, containing only UID, won't matter, .play() is secure
-
-  getStreamUrl(sres.play(), (resobj,cb)=>{cb(resobj);}, cb);
+  try {
+    let genre = req.body.context.AudioPlayer.token.extractGenre();
+    let sres = new streamResponse(req,res,{"radios":[{"UID":req.body.context.AudioPlayer.token.extractUid()}]}); //  Sending fake data, containing only UID, won't matter, .play() is secure
+    getStreamUrl(sres.play(genre), (resobj,cb)=>{cb(resobj);}, cb);
+  }
+  catch(err){
+    let sres = new streamResponse(req,res,{"radios":[{"UID":req.body.context.AudioPlayer.token.extractUid()}]}); //  Sending fake data, containing only UID, won't matter, .play() is secure
+    getStreamUrl(sres.play(), (resobj,cb)=>{cb(resobj);}, cb);
+  }
 
 }
 
