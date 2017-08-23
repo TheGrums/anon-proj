@@ -3,11 +3,6 @@
   the skill logic is not contained here, have a look at responseBuilder.js instead
 */
 
-// TODO
-
-// AMAZON.HelpIntent
-// AMAZON.ResumeIntent
-
 //  This function is a router-like function
 //  to handle different types of requests
 function requestDispatch(req, res, cb){
@@ -16,7 +11,7 @@ function requestDispatch(req, res, cb){
 
   //  Aborting for requests that doesn't require responses
   var no_ans = ["System.ExceptionEncountered","AudioPlayer.PlaybackFinished","AudioPlayer.PlaybackNearlyFinished","AudioPlayer.PlaybackFailed","AudioPlayer.PlaybackStarted","AudioPlayer.PlaybackStopped"];
-  if(no_ans.indexOf(requestType)!=-1){cb({});return;}
+  if(no_ans.indexOf(requestType)!=-1){throw "I'm unable to follow your orders. Please forgive me, beloved master.";return;}
 
 
   switch(requestType){
@@ -44,7 +39,6 @@ function requestDispatch(req, res, cb){
     break;
   }
 }
-
 
 //  This function is a kind of router for handling
 //  each intent separately
@@ -75,11 +69,20 @@ function intentDispatch(req,res,cb){
     case "AMAZON.NextIntent":
       responder.streamGenreRespond(1,req,res,cb);
     break;
+    case "AMAZON.HelpIntent":
+      responder.simpleSpeechRespond("The shoutcast skill allows you to listen to any radio station registered on shoutcast.com. Try 'Alexa, ask shoutcast to play pandashowradio' or 'Alexa, ask shoutcast what's on pandashowradio'. If you don't know any station name try 'Alexa, ask shoutcast to play blues songs'.'",req,res,cb);
+    break;
+    case "AMAZON.ResumeIntent":
+
+    break;
+    case "AMAZON.CancelIntent":
+      responder.streamStopRespond(req,res, cb);
+    break;
     case "getRadioGenre":
       responder.streamGenreRespond(0,req,res,cb);
     break;
     default:
-      throw "My intellectual abilities are too limited to do that.";
+      throw "I'm unable to follow your orders. Please forgive me, beloved master.";
     break;
   }
 

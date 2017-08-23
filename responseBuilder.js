@@ -10,6 +10,14 @@ String.prototype.noSpecChars = function(){
   var newst = this.replace(/[=%&\|\#\+\*\[\]\:]/g," ");
   return newst.replace(/\([A-Za-z0-9]*\)/g,"");
 }
+String.prototype.extractUid = function(){
+  if(test(/[*]/.test(this))return this.split(/[*]/)[1];
+  else return this;
+}
+String.prototype.extractGenre = function(){
+  if(test(/[*]/.test(this))return this.split(/[*]/)[0];
+  else throw "No genre found !";
+}
 
 //  Creating an Object to answer a stream request with more flexibility
 //  Currently covering play and stop functions
@@ -28,7 +36,7 @@ var streamResponse = function(req,res,data){
     var stream = {}, response = {}, outspeech = {}, directive = {}, audioItem = {};
 
     //  Generating adapted speech
-    var speech = "Playing "+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+" on "+this.data.radios[0].Name;
+    var speech = (typeof data.radios[0].Title !== "undefined"?"Playing "+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+" on "+this.data.radios[0].Name:"");
 
     //  Building the response object step by step
     outspeech = new man.OutputSpeech(speech);
@@ -49,17 +57,17 @@ var streamResponse = function(req,res,data){
   };
 
   this.next = function(){
-    var newrads = this.data.radios.map((a,b,c)=>{if(a.UID==this.req.body.context.AudioPlayer.token.split("*")[1])return c[(b+1)%c.length]; }, this);
+    var newrads = this.data.radios.map((a,b,c)=>{if(a.UID==this.req.body.context.AudioPlayer.token.extractUid())return c[(b+1)%c.length]; }, this);
     var finalarray = newrads.filter((a)=>{return typeof a!=="undefined";});
     this.data.radios = finalarray;
-    return this.play(this.req.body.context.AudioPlayer.token.split("*")[0]);
+    return this.play(this.req.body.context.AudioPlayer.token.extractUid());
   }
 
   this.previous = function(){
-    var newrads = this.data.radios.map((a,b,c)=>{if(a.UID==this.req.body.context.AudioPlayer.token.split("*")[1])return c[(b-1<0?c.length-1:b-1)]; },this);
+    var newrads = this.data.radios.map((a,b,c)=>{if(a.UID==this.req.body.context.AudioPlayer.token.extractUid())return c[(b-1<0?c.length-1:b-1)]; },this);
     var finalarray = newrads.filter((a)=>{return typeof a!=="undefined";});
     this.data.radios = finalarray;
-    return this.play(this.req.body.context.AudioPlayer.token.split("*")[0]);
+    return this.play(this.req.body.context.AudioPlayer.token.extractUid());
   }
 
 }
@@ -78,7 +86,7 @@ function getStreamUrl(resobj,cb,cbarg){
     url:'http://optout.shoutcast.com/radioinfo.cfm',
     form:{
       "action":"uid",
-      "uid":(/[*]/.test(resobj.response.directives[0].audioItem.stream.token)?resobj.response.directives[0].audioItem.stream.token.split("*")[1]:resobj.response.directives[0].audioItem.stream.token),
+      "uid":(resobj.response.directives[0].audioItem.stream.token.extractUid()),
       "limit":1,
       "format":"json",
       "extended":"yes",
@@ -139,7 +147,7 @@ function filterData(data,req,cb1,cbarg,...args){
   else if(data.radios.length>1&&(typeof req.body.request.dialogState === "undefined"||req.body.request.dialogState=="STARTED")){
     var man = require('./objectsCollection');
     var msg = "I found several radio stations, could you be more specific ? Here is a sample of what I've found :";
-    safeStationList(data).radios.slice(0,3).forEach((a)=>{msg+=" "+a.Name+",";});
+    safeStationList(data).radios.slice(0,3).forEach((a)=>{msg+=" "+a.Name+",";}); //  Two securities are better than one
     cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",new man.Intent(req.body.request.intent.name,{"Radio":new man.Slot("Radio")}),"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
   }
   else if(typeof data.radios[0].UID==="undefined"||data.radios.UID==""){
@@ -191,8 +199,9 @@ function streamGenreRespond(action,req,res,cb){
   var searchterm;
 
   if(action==1||action==-1){
-    if(typeof req.body.context.AudioPlayer.token === "undefined"||!(/[*]/.test(req.body.context.AudioPlayer.token))){simpleSpeechRespond("This can't be done.",req,res,cb);return;}
-    searchterm = req.body.context.AudioPlayer.token.split("*")[0];
+    if(typeof req.body.context.AudioPlayer.token === "undefined"){simpleSpeechRespond("This can't be done.",req,res,cb);return;}
+    try{searchterm = req.body.context.AudioPlayer.token.extractGenre();}
+    catch(err){simpleSpeechRespond("This can't be done.",req,res,cb);return;}
   }
   else if(action==0){
     if(typeof req.body.request.intent.slots.Genre.value === "undefined"||req.body.request.intent.slots.Genre.value==""){simpleSpeechRespond("An error occured.",req,res,cb);return;}
@@ -222,15 +231,30 @@ function streamPlayRespond(req,res,cb){
   askShoutcast("station", req.body.request.intent.slots.Radio.value, (data,req,res)=>{
     var sres = new streamResponse(req,res,data);
 
-    try {filterData(data,req,(cbfunc,stresponse)=>{
-      getStreamUrl(stresponse[0].play(),(resobj,cbfunc)=>{
-        cbfunc(resobj);
-      },cbfunc);
-    },cb,sres);} //  Callback executed after last external request (getting streamUrl)
+    try {
+
+      filterData(data,req,(cbfunc,stresponse)=>{
+
+        getStreamUrl(stresponse[0].play(),(resobj,cbfunc)=>{
+          cbfunc(resobj);
+        },cbfunc);
+
+      },cb,sres);
+
+    } //  Callback executed after last external request (getting streamUrl)
 
     catch(err) {simpleSpeechRespond(err,req,res,cb);}
 
   },req,res);
+}
+
+function streamResumeRespond(req,res,cb){
+  if(typeof req.body.context.AudioPlayer.token === "undefined"){simpleSpeechRespond("This can't be done.",req,res,cb);return;}
+
+  var sres = new StreamResponse(req,res,{"radios":[{"UID":req.body.context.AudioPlayer.token.extractUid()}]});  //  Sending fake data, containing only UID, won't matter, .play() is secure
+
+  getStreamUrl(sres.play(), (resobj,cb)=>{cb(resobj);}, cb);
+
 }
 
 //  Asking alexa to stop playing a stream
@@ -250,6 +274,7 @@ function simpleSpeechRespond(text,req,res,cb){
 
 //  Exporting functions
 module.exports = {
+  streamResumeRespond : streamResumeRespond,
   streamGenreRespond : streamGenreRespond,
   trackRespond : trackRespond,
   streamPlayRespond : streamPlayRespond,
