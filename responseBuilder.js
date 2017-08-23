@@ -66,7 +66,7 @@ var streamResponse = function(req,res,data){
     var newrads = this.data.radios.map((a,b,c)=>{if(a.UID==this.req.body.context.AudioPlayer.token.extractUid())return c[(b+1)%c.length]; }, this);
     var finalarray = newrads.filter((a)=>{return typeof a!=="undefined";});
     this.data.radios = finalarray;
-    return this.play(this.req.body.context.AudioPlayer.token.extractUid());
+    return this.play(this.req.body.context.AudioPlayer.token.extractGenre());
   }
 
   this.previous = function(){
