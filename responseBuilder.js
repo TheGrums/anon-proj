@@ -147,13 +147,15 @@ function askShoutcast(searchkey, searchterm, cb, req, res, ...addarg){
 
 function filterData(data,req,cb1,cbarg,...args){
 
-  if(typeof data.radios === "undefined"||!safeStationList(data).radios.length){
-    throw ("I couldn't find any station named "+req.body.request.intent.slots.Radio.value+".").err();
+  var oname = req.body.request.intent.slots.Radio.value;
+
+  if(typeof data.radios === "undefined"||!safeStationList(data, oname).radios.length){
+    throw ("<speak>I couldn't find any station named "+req.body.request.intent.slots.Radio.value+".</speak>").err();
   }
   else if(safeStationList(data).radios.length>1&&(typeof req.body.request.dialogState === "undefined"||req.body.request.dialogState=="STARTED")){
     var man = require('./objectsCollection');
     var msg = "<speak>This led me to several radio stations, could you be more specific ? Here is a sample of what I've found :";
-    safeStationList(data).radios.slice(0,3).forEach((a)=>{msg+=" "+a.Name+"<break strength=\"medium\" />";});
+    safeStationList(data,oname).radios.slice(0,3).forEach((a)=>{msg+=" "+a.Name+"<break strength=\"medium\" />";});
     msg+="</speak>";
     cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",new man.Intent(req.body.request.intent.name,{"Radio":new man.Slot("Radio")}),"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
   }
@@ -168,11 +170,11 @@ function filterData(data,req,cb1,cbarg,...args){
 
 // This function is deleting non-playable content from shoutcast's answer
 
-function safeStationList(data){
+function safeStationList(data, oname){
 
   var newdat = data;
   if(typeof newdat.radios==="undefined"||!newdat.radios.length){
-    throw "<speak>I couldn't find such radio station available.</speak>".err();
+    throw (typeof oname==="undefined"?"<speak>I couldn't find such radio station available.</speak>".err():"<speak>I couldn't find any station named "+req.body.request.intent.slots.Radio.value+".</speak>").err();
   }
   var radios = newdat.radios;
   newdat.radios = radios.filter(function(a){
@@ -216,7 +218,7 @@ function streamGenreRespond(action,req,res,cb){
   }
   askShoutcast("genre", searchterm, (data,req,res,addarg)=>{
   try{
-      var sres = new streamResponse(req,res,safeStationList(data));
+      var sres = new streamResponse(req,res,safeStationList(data,req.body.request.intent.slots.Radio.value));
       var endres;
       if(addarg[0]==1)endres = sres.next();
       else if(addarg[0]==-1)endres = sres.previous();
