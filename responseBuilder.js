@@ -40,7 +40,7 @@ var streamResponse = function(req,res,data){
     //  Those variables are to be sub-components of the responseObject
     var stream = {}, response = {}, outspeech = {}, directive = {}, audioItem = {};
     //  Generating adapted speech
-    var speech = (typeof data.radios[0].Title !== "undefined"?"<speak>Playing "+(this.data.radios[0].Title==""?"music":"<emphasis level=\"reduced\">"+this.data.radios[0].Title)+"</emphasis> on "+this.data.radios[0].Name:"")+"</speak>";
+    var speech = (typeof data.radios[0].Title !== "undefined"?"<speak>Playing "+(this.data.radios[0].Title==""?"music":("<emphasis level=\"reduced\">"+this.data.radios[0].Title))+"</emphasis> on "+this.data.radios[0].Name:"")+"</speak>";
 
     //  Building the response object step by step
     outspeech = new man.OutputSpeech(speech);
