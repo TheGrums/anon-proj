@@ -73,7 +73,7 @@ function intentDispatch(req,res,cb){
       responder.streamGenreRespond(1,req,res,cb);
     break;
     case "AMAZON.HelpIntent":
-      responder.simpleSpeechRespond("<speak>The shoutcast skill allows you to listen to any radio station registered on shoutcast.com. Try <emphasis level='strong'> Alexa, ask shoutcast to start pandashowradio </emphasis> <break strength='moderate'/> or <emphasis level='strong'>Alexa, ask shoutcast what's on pandashowradio</emphasis><break strength='strong'> If you don't know any station name try <emphasis level='strong'>Alexa, ask shoutcast to play blues songs</emphasis>.</speak>",req,res,cb);
+      responder.simpleSpeechRespond("<speak>The shoutcast skill allows you to listen to any radio station registered on shoutcast.com. Try <emphasis> Alexa, ask shoutcast to start pandashowradio </emphasis> <break strength=\"moderate\"/> or <emphasis>Alexa, ask shoutcast what's on pandashowradio</emphasis><break strength=\"strong\"> If you don't know any station name try <emphasis>Alexa, ask shoutcast to play blues songs</emphasis>.</speak>",req,res,cb);
     break;
     case "AMAZON.ResumeIntent":
       responder.streamResumeRespond(req,res,cb);
