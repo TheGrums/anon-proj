@@ -193,7 +193,7 @@ function trackRespond(req,res,cb){
   askShoutcast("station", req.body.request.intent.slots.Radio.value, (data,req,res)=>{
 
     var man = require('./objectsCollection');
-    try {filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(true,[],new man.OutputSpeech("<speak><emphasis>"data.radios[0].Name+"</emphasis> is playing <emphasis>"+data.radios[0].Title+"</emphasis></speak>"))));},cb);}
+    try {filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(true,[],new man.OutputSpeech("<speak><emphasis>"+data.radios[0].Name+"</emphasis> is playing <emphasis>"+data.radios[0].Title+"</emphasis></speak>"))));},cb);}
     catch(err) {console.log("ERROR : "+err.message);simpleSpeechRespond(err.message,req,res,cb);}
 
   },req,res);
