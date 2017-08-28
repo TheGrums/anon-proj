@@ -50,7 +50,7 @@ function intentDispatch(req,res,cb){
   var responder = require('./responseBuilder');
 
   var exceptions = ["AMAZON.LoopOffIntent","AMAZON.LoopOnIntent","AMAZON.RepeatIntent","AMAZON.ShuffleOffIntent","AMAZON.ShuffleOnIntent","AMAZON.StartOverIntent"];
-  if(exceptions.indexOf(intentName)!=-1){throw "I can't execute your orders, human lord.";return;}
+  if(exceptions.indexOf(intentName)!=-1){throw "Sorry <break time='0.5s'/> I can't do that.";return;}
 
   switch(intentName){
 
