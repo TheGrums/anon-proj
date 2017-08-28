@@ -38,7 +38,7 @@ function requestDispatch(req, res, cb){
       responder.streamStopRespond(req,res,cb);
     break;
     default:
-      throw "<speak>I'm quite sure that this isn't possible.</speak>";
+      throw "I'm unable to follow your orders. Please forgive me, beloved master.";
     break;
   }
 }
@@ -50,7 +50,7 @@ function intentDispatch(req,res,cb){
   var responder = require('./responseBuilder');
 
   var exceptions = ["AMAZON.LoopOffIntent","AMAZON.LoopOnIntent","AMAZON.RepeatIntent","AMAZON.ShuffleOffIntent","AMAZON.ShuffleOnIntent","AMAZON.StartOverIntent"];
-  if(exceptions.indexOf(intentName)!=-1){throw "<speak>I can't execute your orders, human lord.</speak>";return;}
+  if(exceptions.indexOf(intentDispatch)!=-1){throw "I can't execute your orders, human lord.";return;}
 
   switch(intentName){
 
@@ -73,7 +73,7 @@ function intentDispatch(req,res,cb){
       responder.streamGenreRespond(1,req,res,cb);
     break;
     case "AMAZON.HelpIntent":
-      responder.simpleSpeechRespond("<speak>The shoutcas skill allows you to listen to any music registered at shoutcast.com. Try <break time='0.5s' /><emphasis level='reduced'>Alexa, ask shoutcast to start <emphasis>pandashowradio</emphasis></emphasis> <break time='0.5s' /> or <break time='0.5s' /> <emphasis level='reduced'>Alexa, ask shoutcast what song is <emphasis>radio banovina playing</emphasis></emphasis> <break time='1s' />If you don't know any radio station<break time='0.5s'/> try <break time='0.5s' /><emphasis level='reduced'>Alexa, ask shoutcast to play rock songs</emphasis></speak>",req,res,cb);
+      responder.simpleSpeechRespond("The shoutcast skill allows you to listen to any radio station registered on shoutcast.com. Try 'Alexa, ask shoutcast to start pandashowradio' or 'Alexa, ask shoutcast what's on pandashowradio'. If you don't know any station name try 'Alexa, ask shoutcast to play blues songs'.'",req,res,cb);
     break;
     case "AMAZON.ResumeIntent":
       responder.streamResumeRespond(req,res,cb);
@@ -85,7 +85,7 @@ function intentDispatch(req,res,cb){
       responder.streamGenreRespond(0,req,res,cb);
     break;
     default:
-      throw "<speak>Sorry <break strength='medium'/> I can't do that.</speak>";
+      throw "I'm unable to follow your orders. Please forgive me, beloved master.";
     break;
   }
 

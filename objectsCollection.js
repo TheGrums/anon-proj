@@ -37,8 +37,8 @@ var Intent = function(name,slots){//  slots has to be a list of Slot objects
 }
 
 var OutputSpeech = function(text){  // String
-  this.type = "SSML";
-  this.ssml = text;
+  this.type = "PlainText"; //  Assuming type will always be text
+  this.text = text;
 }
 
 var Response = function(shouldEndSession, directives, outsp){ // bool, array[Directive object], OutputSpeech Object
