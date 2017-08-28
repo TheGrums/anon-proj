@@ -181,6 +181,7 @@ function safeStationList(data, oname){
 
 /*  Returning void */
 function trackRespond(req,res,cb){
+  if(typeof req.body.request.intent.slots.Radio.value === "undefined")simpleSpeechRespond("I'm not able to understand that.",req,res,cb);
   askShoutcast("station", req.body.request.intent.slots.Radio.value, (data,req,res)=>{
 
     var man = require('./objectsCollection');
