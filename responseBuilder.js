@@ -40,7 +40,7 @@ var streamResponse = function(req,res,data){
     //  Those variables are to be sub-components of the responseObject
     var stream = {}, response = {}, outspeech = {}, directive = {}, audioItem = {};
     //  Generating adapted speech
-    var speech = (typeof data.radios[0].Title !== "undefined"?"Playing <emphasis>"+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+"</emphasis> on "+this.data.radios[0].Name:"");
+    var speech = (typeof data.radios[0].Title !== "undefined"?"Playing "+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+" on "+this.data.radios[0].Name:"");
 
     //  Building the response object step by step
     outspeech = new man.OutputSpeech(speech);
@@ -140,12 +140,12 @@ function askShoutcast(searchkey, searchterm, cb, req, res, ...addarg){
 function filterData(data,req,cb1,cbarg,...args){
 
   if(typeof data.radios === "undefined"||!safeStationList(data,req.body.request.intent.slots.Radio.value).radios.length){
-    throw ("I couldn't find any station named <emphasis>"+req.body.request.intent.slots.Radio.value+"</emphasis>.").err();
+    throw ("I couldn't find any station named "+req.body.request.intent.slots.Radio.value+".").err();
   }
   else if(safeStationList(data,req.body.request.intent.slots.Radio.value).radios.length>1&&(typeof req.body.request.dialogState === "undefined"||req.body.request.dialogState=="STARTED")){
     var man = require('./objectsCollection');
     var msg = "This led me to several radio stations<break time='0.5s'/> could you be more specific ? Here is a sample of what I've found :";
-    safeStationList(data,req.body.request.intent.slots.Radio.value).radios.slice(0,3).forEach((a)=>{msg+="<emphasis>"+a.Name+"</emphasis><break time='0.5s'/>";});
+    safeStationList(data,req.body.request.intent.slots.Radio.value).radios.slice(0,3).forEach((a)=>{msg+=""+a.Name+"<break time='0.5s'/>";});
     cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",new man.Intent(req.body.request.intent.name,{"Radio":new man.Slot("Radio")}),"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
   }
   else if(typeof data.radios[0].UID==="undefined"||data.radios.UID==""){
@@ -184,7 +184,7 @@ function trackRespond(req,res,cb){
   askShoutcast("station", req.body.request.intent.slots.Radio.value, (data,req,res)=>{
 
     var man = require('./objectsCollection');
-    try {filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(true,[],new man.OutputSpeech("<emphasis>"+data.radios[0].Name+"</emphasis> is playing <emphasis>"+data.radios[0].Title+"</emphasis>"))));},cb);}
+    try {filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(true,[],new man.OutputSpeech(""+data.radios[0].Name+" is playing "+data.radios[0].Title+""))));},cb);}
     catch(err) {console.log("ERROR : "+err.message);simpleSpeechRespond(err.message,req,res,cb);}
 
   },req,res);
