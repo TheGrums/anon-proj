@@ -32,7 +32,7 @@ function requestDispatch(req, res, cb){
       responder.streamGenreRespond(-1,req,res,cb);
     break;
     case "LaunchRequest":
-      throw "Shoutcast is ready to listen.";
+      throw "The shoutcas skill allows you to listen to any music registered at shoutcast.com. Try <break time='0.5s' /><emphasis level='reduced'>Alexa, ask shoutcast to start <emphasis>pandashowradio</emphasis></emphasis> <break time='0.5s' /> or <break time='0.5s' /> <emphasis level='reduced'>Alexa, ask shoutcast what song is <emphasis>jazz and lounge station</emphasis> playing</emphasis> <break time='1s' />If you don't know any radio station<break time='0.5s'/> try <break time='0.5s' /><emphasis level='reduced'>Alexa, ask shoutcast to play rock songs</emphasis>";
     break;
     case "AudioPlayer.PlaybackFailed":
       responder.streamStopRespond(req,res,cb);
