@@ -163,7 +163,7 @@ function safeStationList(data, oname){
 
   var newdat = data;
   if(typeof newdat.radios==="undefined"||!newdat.radios.length){
-    throw (typeof oname ==="undefined"?"I couldn't find any radio station up running.".err():("I couldn't find any radio station named <emphasis level='reduced'>"+oname+"</emphasis> running.").err());
+    throw (typeof oname ==="undefined"?"I couldn't find any radio station up running.".err():("I couldn't find any radio station running named "+oname+".").err());
   }
   var radios = newdat.radios;
   newdat.radios = radios.filter(function(a){
@@ -184,7 +184,7 @@ function trackRespond(req,res,cb){
   askShoutcast("station", req.body.request.intent.slots.Radio.value, (data,req,res)=>{
 
     var man = require('./objectsCollection');
-    try {filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(true,[],new man.OutputSpeech(data.radios[0].Name+" is playing "+data.radios[0].Title))));},cb);}
+    try {filterData(data,req,(func)=>{func(new man.responseObject(new man.Response(true,[],new man.OutputSpeech("<emphasis level='reduced'>"data.radios[0].Name+"</emphasis> is playing <emphasis level='reduced'>"+data.radios[0].Title+"</emphasis>"))));},cb);}
     catch(err) {console.log("ERROR : "+err.message);simpleSpeechRespond(err.message,req,res,cb);}
 
   },req,res);
