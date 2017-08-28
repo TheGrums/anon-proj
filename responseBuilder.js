@@ -139,13 +139,13 @@ function askShoutcast(searchkey, searchterm, cb, req, res, ...addarg){
 
 function filterData(data,req,cb1,cbarg,...args){
 
-  if(typeof data.radios === "undefined"||!safeStationList(data,eq.body.request.intent.slots.Radio.value).radios.length){
+  if(typeof data.radios === "undefined"||!safeStationList(data,req.body.request.intent.slots.Radio.value).radios.length){
     throw ("I couldn't find any station named <emphasis level='reduced'>"+req.body.request.intent.slots.Radio.value+"</emphasis>.").err();
   }
-  else if(safeStationList(data,eq.body.request.intent.slots.Radio.value).radios.length>1&&(typeof req.body.request.dialogState === "undefined"||req.body.request.dialogState=="STARTED")){
+  else if(safeStationList(data,req.body.request.intent.slots.Radio.value).radios.length>1&&(typeof req.body.request.dialogState === "undefined"||req.body.request.dialogState=="STARTED")){
     var man = require('./objectsCollection');
     var msg = "This led me to several radio stations<break time='0.5s'/> could you be more specific ? Here is a sample of what I've found :";
-    safeStationList(data,eq.body.request.intent.slots.Radio.value).radios.slice(0,3).forEach((a)=>{msg+=" <emphasis level='reduced'>"+a.Name+"</emphasis><break time='0.5s'/>";});
+    safeStationList(data,req.body.request.intent.slots.Radio.value).radios.slice(0,3).forEach((a)=>{msg+=" <emphasis level='reduced'>"+a.Name+"</emphasis><break time='0.5s'/>";});
     cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",new man.Intent(req.body.request.intent.name,{"Radio":new man.Slot("Radio")}),"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
   }
   else if(typeof data.radios[0].UID==="undefined"||data.radios.UID==""){
