@@ -40,7 +40,7 @@ var streamResponse = function(req,res,data){
     //  Those variables are to be sub-components of the responseObject
     var stream = {}, response = {}, outspeech = {}, directive = {}, audioItem = {};
     //  Generating adapted speech
-    var speech = (typeof data.radios[0].Title !== "undefined"?"Playing "+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+" on "+this.data.radios[0].Name:"");
+    var speech = (typeof data.radios[0].Title !== "undefined"?"Playing <emphasis level='reduced'>"+(this.data.radios[0].Title==""?"music":this.data.radios[0].Title)+"</emphasis> on "+this.data.radios[0].Name:"");
 
     //  Building the response object step by step
     outspeech = new man.OutputSpeech(speech);
@@ -139,17 +139,17 @@ function askShoutcast(searchkey, searchterm, cb, req, res, ...addarg){
 
 function filterData(data,req,cb1,cbarg,...args){
 
-  if(typeof data.radios === "undefined"||!safeStationList(data).radios.length){
-    throw ("I couldn't find any station named "+req.body.request.intent.slots.Radio.value+".").err();
+  if(typeof data.radios === "undefined"||!safeStationList(data,eq.body.request.intent.slots.Radio.value).radios.length){
+    throw ("I couldn't find any station named <emphasis level='reduced'>"+req.body.request.intent.slots.Radio.value+"</emphasis>.").err();
   }
-  else if(safeStationList(data).radios.length>1&&(typeof req.body.request.dialogState === "undefined"||req.body.request.dialogState=="STARTED")){
+  else if(safeStationList(data,eq.body.request.intent.slots.Radio.value).radios.length>1&&(typeof req.body.request.dialogState === "undefined"||req.body.request.dialogState=="STARTED")){
     var man = require('./objectsCollection');
-    var msg = "This led me to several radio stations, could you be more specific ? Here is a sample of what I've found :";
-    safeStationList(data).radios.slice(0,3).forEach((a)=>{msg+=" "+a.Name+",";});
+    var msg = "This led me to several radio stations<break time='0.5s'/> could you be more specific ? Here is a sample of what I've found :";
+    safeStationList(data,eq.body.request.intent.slots.Radio.value).radios.slice(0,3).forEach((a)=>{msg+=" <emphasis level='reduced'>"+a.Name+"</emphasis><break time='0.5s'/>";});
     cbarg(new man.responseObject(new man.Response(false,[new man.ElicitDirective("Radio",new man.Intent(req.body.request.intent.name,{"Radio":new man.Slot("Radio")}),"Dialog.ElicitSlot")],new man.OutputSpeech(msg)))); // Executing the second callback function to respond directly
   }
   else if(typeof data.radios[0].UID==="undefined"||data.radios.UID==""){
-    throw "Sorry, this radio station can't be played due to technical reasons.".err();
+    throw "Sorry<break time='0.5s'/> this radio station can't be played due to technical reasons.".err();
   }
   else{
     cb1(cbarg,args);
@@ -159,18 +159,18 @@ function filterData(data,req,cb1,cbarg,...args){
 
 // This function is deleting non-playable content from shoutcast's answer
 
-function safeStationList(data){
+function safeStationList(data, oname){
 
   var newdat = data;
   if(typeof newdat.radios==="undefined"||!newdat.radios.length){
-    throw "I couldn't find any radio station up running. I might have misunderstood, could you repeat ?".err();
+    throw (typeof oname ==="undefined"?"I couldn't find any radio station up running.".err():("I couldn't find any radio station named <emphasis level='reduced'>"+oname+"</emphasis> running.").err());
   }
   var radios = newdat.radios;
   newdat.radios = radios.filter(function(a){
     return !(typeof a.UID === "undefined" || a.UID == "");
   });
   if(!newdat.radios.length){
-    throw "The stations I've found can't be played currently".err();
+    throw "Sorry<break time='0.5s'/>I'm unable to play any of the stations I've found".err();
   }
   return newdat;
 
